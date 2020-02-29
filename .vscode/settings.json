@@ -1,0 +1,12 @@
+{
+  "cSpell.words": [
+    "conda",
+    "matmul",
+    "pyparsing"
+  ],
+  "python.autoComplete.extraPaths": ["./src", "./automata-tools"],
+  "python.pythonPath": "/opt/anaconda3/envs/automataTools/bin/python",
+  "python.envFile": "${workspaceFolder}/.env",
+  "python.linting.pylintEnabled": true,
+  "python.linting.enabled": true
+}
