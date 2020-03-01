@@ -6,10 +6,7 @@ sys.path.append(_project_root)
 import time
 
 from examples.NFAfromCustomRule import NFAFromRegex, executor
-from src.DFAFromNFA import DFAFromNFA
-from src.BuildAutomata import BuildAutomata
-from src.utils import drawGraph, isInstalled
-
+from src import DFAFromNFA, BuildAutomata, drawGraph, isInstalled
 
 def main():
     input = "$ * what is { 2 , 4 } that $ *"
