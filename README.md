@@ -117,6 +117,21 @@ Save env file: `conda list --explicit > automataTools-env.txt`
 
 Create a `.env` file with content `PYTHONPATH=automataTools`
 
+### Publish
+
+To pypi
+
+```shell
+python3 setup.py sdist bdist_wheel
+twine upload dist/*
+```
+
+To Conda
+
+```shell
+# I'm learning how to do...
+```
+
 ## Resources
 
 [Automata Theory Course Slides](http://www.cs.may.ie/staff/jpower/Courses/Previous/parsing/node5.html)
