@@ -100,6 +100,48 @@ Build automata that will match the same token for n to m times
 repeatedAutomata = BuildAutomata.repeatRangeStruct(automata, 2, 3)
 ```
 
+### Automata
+
+See example in [features/steps/customRule.py](features/steps/customRule.py)
+
+```python
+from automata_tools import DFAFromNFA, Automata
+
+from your_implementation import NFAFromRegex, executor
+
+nfa: Automata = NFAFromRegex().buildNFA(rule)
+minDFA: Automata = DFAFromNFA(nfa).getMinimizedDFA()
+minDFA.setExecuter(executor)
+
+print(minDFA.execute(someText))
+```
+
+where `executor` is a function like the one in [examples/NFAfromCustomRule.py](examples/NFAfromCustomRule.py):
+
+```python
+def executor(tokens, startState, finalStates, transitions):
+    return True
+```
+
+### setExecuter
+
+Set an executor to the automata that can freely use state and transition of the automata, and return a boolean value.
+
+```python
+from automata_tools import IAutomataExecutor
+
+defaultExecuter: IAutomataExecutor = lambda tokens, startState, finalStates, transitions: True
+minDFA.setExecuter(defaultExecuter)
+```
+
+### setTokenizer
+
+Set an tokenizer to the automata that can transform string to list of string token, which will be used by the executer.
+
+```python
+minDFA.setExecuter(lambda input: input.split(' ')[::-1])
+```
+
 ## Development
 
 ### Environment
