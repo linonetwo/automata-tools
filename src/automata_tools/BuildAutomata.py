@@ -1,7 +1,7 @@
 from typing import cast, Optional
 
-from src.Automata import Automata
-from src.constants import EPSILON
+from automata_tools.Automata import Automata
+from automata_tools.constants import EPSILON
 
 
 class BuildAutomata:

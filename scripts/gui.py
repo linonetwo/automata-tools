@@ -12,8 +12,7 @@ except ImportError as err:
     sys.exit(1)
 
 from examples.NFAfromRegex import NFAfromRegex
-from src.DFAFromNFA import DFAFromNFA
-from src.utils import drawGraph, isInstalled
+from automata_tools import DFAFromNFA, drawGraph, isInstalled
 
 dotFound = isInstalled("dot")
 if dotFound:

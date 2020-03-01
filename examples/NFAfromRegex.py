@@ -1,4 +1,4 @@
-from src.BuildAutomata import BuildAutomata
+from automata_tools.BuildAutomata import BuildAutomata
 
 
 class NFAfromRegex:

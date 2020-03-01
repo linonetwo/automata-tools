@@ -1,7 +1,7 @@
 from behave import given, then
 
 from examples.NFAfromCustomRule import NFAFromRegex, executor
-from src import DFAFromNFA
+from automata_tools import DFAFromNFA
 
 @given('the rule "{rule}"')
 def getRule(context, rule):

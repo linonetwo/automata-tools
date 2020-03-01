@@ -1,4 +1,4 @@
-from src.Automata import Automata
+from automata_tools.Automata import Automata
 
 
 class DFAFromNFA:

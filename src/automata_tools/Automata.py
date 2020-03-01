@@ -1,6 +1,6 @@
 from typing import Set, Dict, Optional, List, Callable, Union
 
-from src.constants import EPSILON
+from automata_tools.constants import EPSILON
 
 IAutomataTransitions = Dict[int, Dict[int, Set[str]]]
 IAutomataExecutor = Callable[[List[str], int, List[int], IAutomataTransitions], bool]

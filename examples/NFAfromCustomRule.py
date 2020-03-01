@@ -1,6 +1,6 @@
 from typing import Optional, List, Tuple
 
-from src import BuildAutomata, Automata
+from automata_tools import BuildAutomata, Automata
 
 
 def executor(tokens, startState, finalStates, transitions):
