@@ -4,7 +4,7 @@ from src.BuildAutomata import BuildAutomata, Automata
 from src.DFAFromNFA import DFAFromNFA
 
 
-class NFAfromRegex:
+class NFAFromRegex:
     """
     class for building e-nfa from regular expressions
     """

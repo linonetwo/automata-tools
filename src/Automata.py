@@ -155,6 +155,8 @@ class Automata:
         plus.setstartstate(state1)
         plus.addfinalstates(state2)
         ```
+
+        也可以用来复制一个自动机 `withNewStateNumber(0)`
         """
         if not isinstance(self.startstate, int):
             raise Exception("You should set startState before rebuild states")

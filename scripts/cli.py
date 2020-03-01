@@ -5,19 +5,19 @@ sys.path.append(_project_root)
 
 import time
 
-from examples.NFAfromCustomRule import NFAfromRegex
+from examples.NFAfromCustomRule import NFAFromRegex
 from src.DFAFromNFA import DFAFromNFA
 from src.BuildAutomata import BuildAutomata
 from src.utils import drawGraph, isInstalled
 
 
 def main():
-    input = "$ * what is { 0 , 2 } that $ *"
+    input = "$ * what is { 2 , 4 } that $ *"
     if len(sys.argv) > 1:
         input = sys.argv[1]
 
     print("Regular Expression: ", input)
-    nfa = NFAfromRegex().buildNFA(input)
+    nfa = NFAFromRegex().buildNFA(input)
     dfaObj = DFAFromNFA(nfa)
     dfa = dfaObj.getDFA()
     minDFA = dfaObj.getMinimisedDFA()

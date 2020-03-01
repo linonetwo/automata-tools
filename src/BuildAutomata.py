@@ -137,19 +137,21 @@ class BuildAutomata:
                           repeatTimesRangeStart: int,
                           repeatTimesRangeEnd: int):
         """
-        Repeat given token for several different times, given a{0,3}, the automata will be: 
+        Repeat given token for several different times, given a{2,3}, the automata will be: 
         WITH automataToRepeat = (0)-[a]->(1)
-        CREATE (0)-[a]->(4)
         CREATE (0)-[a]->(1)-[a]->(4)
         CREATE (0)-[a]->(2)-[a]->(3)-[a]->(4)
         """
-        [rangeRepeatedAutomata, _] = automataToRepeat.withNewStateNumber(0)
+        rangeRepeatedAutomata = None
 
         for repeatTimes in range(repeatTimesRangeStart,
                                  repeatTimesRangeEnd + 1):
             repeatedAutomata = BuildAutomata.repeatStruct(
                 automataToRepeat, repeatTimes)
-            rangeRepeatedAutomata = BuildAutomata.unionStruct(
-                rangeRepeatedAutomata, repeatedAutomata)
+            if rangeRepeatedAutomata is None:
+                rangeRepeatedAutomata = repeatedAutomata
+            else:
+                rangeRepeatedAutomata = BuildAutomata.unionStruct(
+                    cast(Automata, rangeRepeatedAutomata), repeatedAutomata)
 
         return rangeRepeatedAutomata
