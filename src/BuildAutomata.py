@@ -1,4 +1,4 @@
-from typing import Dict, Optional, List, Union, cast
+from typing import cast, Optional
 
 from src.Automata import Automata
 from src.constants import EPSILON
