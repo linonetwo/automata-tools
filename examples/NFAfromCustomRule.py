@@ -1,6 +1,32 @@
-from typing import Optional, List, Any, Tuple
+from typing import Optional, List, Tuple
 
 from src.BuildAutomata import BuildAutomata, Automata
+
+
+def executor(tokens, startState, finalStates, transitions):
+    currentState: int = startState
+    currentToken = tokens.pop()
+    while currentState not in finalStates:
+        if len(tokens) == 0:
+            return False
+        availableTransitions = transitions[currentState]
+        # search available transition in the first pass
+        for nextState, pathSet in availableTransitions.items():
+            if currentToken in pathSet:
+                currentState = nextState
+                currentToken = tokens.pop()
+                break
+        else:
+            # non-greedy wild card, we only use it when there is no other choice
+            availableTransitions = transitions[currentState]
+            for nextState, pathSet in availableTransitions.items():
+                if '$' in pathSet:
+                    currentState = nextState
+                    currentToken = tokens.pop()
+                    break
+            else:
+                return False  # sadly, no available transition for current token
+    return True
 
 
 class NFAFromRegex:
@@ -123,7 +149,9 @@ class NFAFromRegex:
                 break
         self.stack.append(char)
 
-    def processOperator(self, operator, payload: Optional[Tuple[str, str]] = None):
+    def processOperator(self,
+                        operator,
+                        payload: Optional[Tuple[str, str]] = None):
         if len(self.automata) == 0:
             raise BaseException(
                 f"Error processing operator {operator}. Stack is empty")

@@ -12,13 +12,13 @@ class DFAFromNFA:
     def getDFA(self):
         return self.dfa
 
-    def getMinimisedDFA(self):
+    def getMinimizedDFA(self):
         return self.minDFA
 
     def displayDFA(self):
         self.dfa.display()
 
-    def displayMinimisedDFA(self):
+    def displayMinimizedDFA(self):
         self.minDFA.display()
 
     def buildDFA(self, nfa):

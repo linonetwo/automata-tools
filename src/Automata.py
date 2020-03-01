@@ -1,12 +1,15 @@
-from typing import Set, Dict, Optional, List, Union
+from typing import Set, Dict, Optional, List, Callable, Union
 
 from src.constants import EPSILON
 
 IAutomataTransitions = Dict[int, Dict[int, Set[str]]]
-
+IAutomataExecutor = Callable[[List[str], int, List[int], IAutomataTransitions], bool]
 
 class Automata:
     """class to represent an Automata"""
+
+    executer: IAutomataExecutor
+    tokenizer: Callable[[str], List[str]]
     def __init__(self, language=set(['0', '1'])):
         self.states: Set[int] = set()
         self.startstate: Optional[int] = None
@@ -14,36 +17,26 @@ class Automata:
         self.transitions: IAutomataTransitions = dict()
         self.language: Set[str] = language
 
-    def execute(self, input: str):
+        defaultExecuter: IAutomataExecutor = lambda tokens, startState, finalStates, transitions: True
+        self.executer = defaultExecuter
+        self.tokenizer = lambda input: input.split(' ')[::-1]
+
+    def setExecuter(self, executerFunction: IAutomataExecutor):
+        self.executer = executerFunction
+
+    def setTokenizer(self, tokenizerFunction: Callable[[str], List[str]]):
+        self.tokenizer = tokenizerFunction
+
+    def execute(self, input: str) -> bool:
         """
         test whether input string can let automata go from initial state to final state
         """
         if not isinstance(self.startstate, int):
-            return False
-        tokens = input.split(' ')[::-1]
-        currentState: int = self.startstate
-        currentToken = tokens.pop()
-        while currentState not in self.finalstates:
-            if len(tokens) == 0:
-                return False
-            availableTransitions = self.transitions[currentState]
-            # search available transition in the first pass
-            for nextState, pathSet in availableTransitions.items():
-                if currentToken in pathSet:
-                    currentState = nextState
-                    currentToken = tokens.pop()
-                    break
-            else:
-                # non-greedy wild card, we only use it when there is no other choice
-                availableTransitions = self.transitions[currentState]
-                for nextState, pathSet in availableTransitions.items():
-                    if '$' in pathSet:
-                        currentState = nextState
-                        currentToken = tokens.pop()
-                        break
-                else:
-                    return False  # sadly, no available transition for current token
-        return True
+            raise BaseException("startstate is not a interger, please init this automata properly")
+        if not callable(self.executer):
+            raise BaseException("executer is not a Function, please use setExecuter to set a valid function")
+        tokens = self.tokenizer(input)
+        return self.executer(tokens, self.startstate, self.finalstates, self.transitions)
 
     def to_dict(self):
         return {

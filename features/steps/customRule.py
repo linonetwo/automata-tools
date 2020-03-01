@@ -1,13 +1,13 @@
 from behave import given, then
 
-from examples.NFAfromCustomRule import NFAFromRegex
+from examples.NFAfromCustomRule import NFAFromRegex, executor
 from src.DFAFromNFA import DFAFromNFA
 
 @given('the rule "{rule}"')
 def getRule(context, rule):
     nfa = NFAFromRegex().buildNFA(rule)
-    dfaObj = DFAFromNFA(nfa)
-    minDFA = dfaObj.getMinimisedDFA()
+    minDFA = DFAFromNFA(nfa).getMinimizedDFA()
+    minDFA.setExecuter(executor)
     context.minDFA = minDFA
 
 @then('it matches sentence "{text}"')

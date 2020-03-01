@@ -5,7 +5,7 @@ sys.path.append(_project_root)
 
 import time
 
-from examples.NFAfromCustomRule import NFAFromRegex
+from examples.NFAfromCustomRule import NFAFromRegex, executor
 from src.DFAFromNFA import DFAFromNFA
 from src.BuildAutomata import BuildAutomata
 from src.utils import drawGraph, isInstalled
@@ -20,14 +20,16 @@ def main():
     nfa = NFAFromRegex().buildNFA(input)
     dfaObj = DFAFromNFA(nfa)
     dfa = dfaObj.getDFA()
-    minDFA = dfaObj.getMinimisedDFA()
+    minDFA = dfaObj.getMinimizedDFA()
+    
+    minDFA.setExecuter(executor)
     print(minDFA.execute("a stands for b what is is that c"))
     # print("\nNFA: ")
     # nfaObj.displayNFA()
     # print("\nDFA: ")
     # dfaObj.displayDFA()
-    # print("\nMinimised DFA: ")
-    # dfaObj.displayMinimisedDFA()
+    # print("\nMinimized DFA: ")
+    # dfaObj.displayMinimizedDFA()
     if isInstalled("dot"):
         drawGraph(dfa, "dfa")
         drawGraph(nfa, "nfa")

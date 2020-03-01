@@ -193,7 +193,7 @@ class AutomataGUI:
         self.nfa = nfaObj.getNFA()
         self.dfaObj = DFAFromNFA(self.nfa)
         self.dfa = self.dfaObj.getDFA()
-        self.minDFA = self.dfaObj.getMinimisedDFA()
+        self.minDFA = self.dfaObj.getMinimizedDFA()
         if self.dotFound:
             drawGraph(self.dfa, "dfa")
             drawGraph(self.nfa, "nfa")
@@ -224,7 +224,7 @@ class AutomataGUI:
                 image = self.dfaimg
                 imagefile = self.dfaimagefile
         elif self.selectedButton == 2:
-            header = "Minimised DFA"
+            header = "Minimized DFA"
             automata = self.minDFA
             if self.dotFound:
                 image = self.mindfaimg
