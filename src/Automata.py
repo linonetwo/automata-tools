@@ -1,4 +1,4 @@
-from typing import Set, Dict, Optional, List, Union, cast
+from typing import Set, Dict, Optional, List, Union
 
 from src.constants import EPSILON
 

@@ -1,5 +1,4 @@
-from src.BuildAutomata import BuildAutomata, Automata
-from src.DFAFromNFA import DFAFromNFA
+from src.BuildAutomata import BuildAutomata
 
 
 class NFAfromRegex:

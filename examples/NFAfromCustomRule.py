@@ -1,7 +1,6 @@
-from typing import Set, Dict, Optional, List, Union, cast, Any, Tuple
+from typing import Optional, List, Any, Tuple
 
 from src.BuildAutomata import BuildAutomata, Automata
-from src.DFAFromNFA import DFAFromNFA
 
 
 class NFAFromRegex:

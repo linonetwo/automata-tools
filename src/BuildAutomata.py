@@ -1,4 +1,4 @@
-from typing import Set, Dict, Optional, List, Union, cast
+from typing import Dict, Optional, List, Union, cast
 
 from src.Automata import Automata
 from src.constants import EPSILON
@@ -135,14 +135,14 @@ class BuildAutomata:
     @staticmethod
     def repeatRangeStruct(automataToRepeat: Automata,
                           repeatTimesRangeStart: int,
-                          repeatTimesRangeEnd: int):
+                          repeatTimesRangeEnd: int) -> Automata:
         """
         Repeat given token for several different times, given a{2,3}, the automata will be: 
         WITH automataToRepeat = (0)-[a]->(1)
         CREATE (0)-[a]->(1)-[a]->(4)
         CREATE (0)-[a]->(2)-[a]->(3)-[a]->(4)
         """
-        rangeRepeatedAutomata = None
+        rangeRepeatedAutomata: Optional[Automata] = None
 
         for repeatTimes in range(repeatTimesRangeStart,
                                  repeatTimesRangeEnd + 1):
@@ -154,4 +154,6 @@ class BuildAutomata:
                 rangeRepeatedAutomata = BuildAutomata.unionStruct(
                     cast(Automata, rangeRepeatedAutomata), repeatedAutomata)
 
-        return rangeRepeatedAutomata
+        if rangeRepeatedAutomata is None:
+            [rangeRepeatedAutomata, _] = automataToRepeat.withNewStateNumber(0)
+        return cast(Automata, rangeRepeatedAutomata)
