@@ -10,6 +10,11 @@ Feature: Write Custom Rule
       And it matches sentence "aaa bbb"
       But it won't match sentence "oh my aaa is mine!"
 
+  Scenario: Custom tokenizer can split word and punctuations, so we can make & to stand for punctuations in our rules
+    Given the rule "$ * & I think $ ( are | is ) $ & $ *"
+      Then it matches sentence "well, I think punctuations are cool!"
+      And it matches sentence "Wow, I think your are using, punctuations!"
+
   Scenario: Find text with repeated words
     Given the rule "$ * aaa { 2 , 4 } bbb $ *"
       Then it matches sentence "Ouch aaa aaa bbb cool!"
@@ -25,5 +30,6 @@ Feature: Write Custom Rule
       And it won't match sentence "Ouch bbb cool!"
 
   Scenario: Find text with none greedy behavior
-    Given the rule "$ * and you are BBB $ *"
-      Then it matches sentence "and you are BBB"
+    Given the rule "( $ | & ) * and you are BBB $ *"
+      Then it matches sentence "Wow, and you are AAA and you are BBB"
+      And it matches sentence "Wow, and you are BBB"

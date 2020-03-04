@@ -9,7 +9,7 @@ from examples.NFAfromCustomRule import NFAFromRegex, executor
 from automata_tools import DFAFromNFA, BuildAutomata, drawGraph, isInstalled
 
 def main():
-    input = "$ * what is { 2 , 4 } that $ *"
+    input = "( $ | & ) * and you are BBB $ *"
     if len(sys.argv) > 1:
         input = sys.argv[1]
 
@@ -20,7 +20,7 @@ def main():
     minDFA = dfaObj.getMinimizedDFA()
     
     minDFA.setExecuter(executor)
-    print(minDFA.execute("a stands for b what is is that c"))
+    print(minDFA.execute("Wow, and you are AAA and you are BBB"))
     # print("\nNFA: ")
     # nfaObj.displayNFA()
     # print("\nDFA: ")

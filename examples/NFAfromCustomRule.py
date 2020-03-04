@@ -9,7 +9,7 @@ import re
 from automata_tools import BuildAutomata, Automata
 
 
-punctuations = [',','，',':','：','!','！','《','》','。','；','.']
+punctuations = [',','，',':','：','!','！','《','》','。','；','.','(',')','（','）','|']
 def padPunctuations(shortString: str):
     for punctuation in punctuations:
         shortString = re.sub(f'[{punctuation}]', f' {punctuation} ', shortString)
@@ -41,7 +41,7 @@ def executor(tokens, startState, finalStates, transitions):
                     currentState = nextState
                     currentToken = tokens.pop() if len(tokens) > 0 else None
                     break
-                elif '$' in pathSet and currentToken != None:
+                elif '$' in pathSet and not currentToken.isnumeric() and currentToken not in punctuations and currentToken != None:
                     currentState = nextState
                     currentToken = tokens.pop() if len(tokens) > 0 else None
                     break
