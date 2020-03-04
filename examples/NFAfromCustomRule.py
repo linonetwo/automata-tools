@@ -1,11 +1,26 @@
+import sys
+import os
+_project_root = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+sys.path.append(os.path.join(_project_root, 'src'))
+
 from typing import Optional, List, Tuple
+import re
 
 from automata_tools import BuildAutomata, Automata
 
 
+punctuations = [',','，',':','：','!','！','《','》','。','；','.']
+def padPunctuations(shortString: str):
+    for punctuation in punctuations:
+        shortString = re.sub(f'[{punctuation}]', f' {punctuation} ', shortString)
+    return shortString
+def tokenizer(input: str):
+    inputWithPunctuationsPaddedWithSpace = padPunctuations(input)
+    tokens = inputWithPunctuationsPaddedWithSpace.split(' ')[::-1]
+    return [item for item in tokens if item]
 def executor(tokens, startState, finalStates, transitions):
     currentState: int = startState
-    currentToken = tokens.pop()
+    currentToken: str = tokens.pop()
     while currentState not in finalStates:
         if len(tokens) == 0:
             return False
@@ -20,7 +35,15 @@ def executor(tokens, startState, finalStates, transitions):
             # non-greedy wild card, we only use it when there is no other choice
             availableTransitions = transitions[currentState]
             for nextState, pathSet in availableTransitions.items():
-                if '$' in pathSet:
+                if '%' in pathSet and currentToken.isnumeric():
+                    currentState = nextState
+                    currentToken = tokens.pop()
+                    break
+                elif '&' in pathSet and currentToken in punctuations:
+                    currentState = nextState
+                    currentToken = tokens.pop()
+                    break
+                elif '$' in pathSet:
                     currentState = nextState
                     currentToken = tokens.pop()
                     break
@@ -40,6 +63,7 @@ class NFAFromRegex:
     automata: List[Automata] = []
 
     starOperator = '*'
+    plusOperator = '+'
     concatOperator = '.'
     orOperator = '|'
     initOperator = '::e::'
@@ -49,12 +73,15 @@ class NFAFromRegex:
     closingBrace = '}'
 
     binaryOperators = [orOperator, concatOperator]
-    unaryOperators = [starOperator]
-    bracketKeywords = [
-        openingBracket, closingBracket, openingBrace, closingBrace
+    unaryOperators = [starOperator, plusOperator]
+    openingBrackets = [
+        openingBracket, openingBrace
+    ]
+    closingBrackets = [
+        closingBracket, closingBrace
     ]
     allOperators = [initOperator
-                    ] + binaryOperators + unaryOperators + bracketKeywords
+                    ] + binaryOperators + unaryOperators + openingBrackets + closingBrackets
 
     def __init__(self):
         pass
@@ -76,13 +103,13 @@ class NFAFromRegex:
                 language.add(token)
                 # if previous automata is standalong (char or a group or so), we concat current automata with previous one
                 if ((previous not in self.allOperators) or
-                        previous in [self.closingBracket, self.starOperator]):
+                        previous in [self.closingBracket] + self.unaryOperators):
                     self.addOperatorToStack(self.concatOperator)
                 self.automata.append(BuildAutomata.characterStruct(token))
             elif token == self.openingBracket:
                 # concat current automata with previous one, same as above
                 if ((previous not in self.allOperators) or
-                        previous in [self.closingBracket, self.starOperator]):
+                        previous in [self.closingBracket] + self.unaryOperators):
                     self.addOperatorToStack(self.concatOperator)
                 self.stack.append(token)
             elif token == self.closingBracket:
@@ -111,7 +138,12 @@ class NFAFromRegex:
                 index += 1
                 continue
             elif token == self.starOperator:
-                if previous in self.binaryOperators or previous == self.openingBracket or previous == self.starOperator:
+                if previous in self.binaryOperators + self.openingBrackets + self.unaryOperators:
+                    raise BaseException(
+                        f"Error processing {token} after {previous}")
+                self.processOperator(token)
+            elif token == self.plusOperator:
+                if previous in self.binaryOperators + self.openingBrackets + self.unaryOperators:
                     raise BaseException(
                         f"Error processing {token} after {previous}")
                 self.processOperator(token)
@@ -119,8 +151,7 @@ class NFAFromRegex:
                 if previous in self.binaryOperators or previous == self.openingBracket:
                     raise BaseException(
                         f"Error processing {token} after {previous}")
-                else:
-                    self.addOperatorToStack(token)
+                self.addOperatorToStack(token)
             else:
                 raise BaseException(f"Symbol {token} is not allowed")
             previous = token
@@ -158,6 +189,10 @@ class NFAFromRegex:
         if operator == self.starOperator:
             a = self.automata.pop()
             self.automata.append(BuildAutomata.starStruct(a))
+        elif operator == self.plusOperator:
+            a = self.automata.pop()
+            moreA = BuildAutomata.starStruct(a)
+            self.automata.append(BuildAutomata.concatenationStruct(a, moreA))
         elif operator == self.closingBrace:
             if payload == None:
                 raise BaseException(
