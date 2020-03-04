@@ -5,7 +5,7 @@ sys.path.append(_project_root)
 
 import time
 
-from examples.NFAfromCustomRule import NFAFromRegex, executor
+from examples.NFAfromCustomRule import NFAFromRegex, executor, tokenizer
 from automata_tools import DFAFromNFA, BuildAutomata, drawGraph, isInstalled
 
 def main():
@@ -20,6 +20,7 @@ def main():
     minDFA = dfaObj.getMinimizedDFA()
     
     minDFA.setExecuter(executor)
+    minDFA.setTokenizer(tokenizer)
     print(minDFA.execute("Wow, and you are AAA and you are BBB"))
     # print("\nNFA: ")
     # nfaObj.displayNFA()

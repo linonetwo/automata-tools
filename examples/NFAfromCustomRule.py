@@ -3,50 +3,114 @@ import os
 _project_root = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(os.path.join(_project_root, 'src'))
 
-from typing import Optional, List, Tuple
+from typing import Optional, List, Tuple, Dict, Set, cast
 import re
 
 from automata_tools import BuildAutomata, Automata
 
+punctuations = [
+    ',', '，', ':', '：', '!', '！', '《', '》', '。', '；', '.', '(', ')', '（', '）',
+    '|'
+]
 
-punctuations = [',','，',':','：','!','！','《','》','。','；','.','(',')','（','）','|']
+
 def padPunctuations(shortString: str):
     for punctuation in punctuations:
-        shortString = re.sub(f'[{punctuation}]', f' {punctuation} ', shortString)
+        shortString = re.sub(f'[{punctuation}]', f' {punctuation} ',
+                             shortString)
     return shortString
+
+
 def tokenizer(input: str):
     inputWithPunctuationsPaddedWithSpace = padPunctuations(input)
     tokens = inputWithPunctuationsPaddedWithSpace.split(' ')[::-1]
     return [item for item in tokens if item]
-def executor(tokens, startState, finalStates, transitions):
+
+
+IAvailableTransitions = Dict[int, Set[str]]
+
+SymbolWord = 'SymbolWord'
+SymbolNumeric = 'SymbolNumeric'
+SymbolPunctuation = 'SymbolPunctuation'
+SymbolWildcard = 'SymbolWildcard'
+
+
+def matchTokenInSet(token: Optional[str], acceptTokens: Set[str]):
+    if token == None:
+        return None
+    if token in acceptTokens:
+        return SymbolWord
+    elif '%' in acceptTokens and token.isnumeric():
+        return SymbolNumeric
+    elif '&' in acceptTokens and token in punctuations:
+        return SymbolPunctuation
+    elif '$' in acceptTokens and not token.isnumeric(
+    ) and token not in punctuations:
+        return SymbolWildcard
+    return None
+
+
+def tryConsumeNonWildCard(availableTransitions: IAvailableTransitions,
+                          currentToken: Optional[str], currentTokens: List[str]
+                          ) -> Optional[Tuple[int, Optional[str], List[str]]]:
+    # search available transition in the first pass
+    for nextState, pathSet in availableTransitions.items():
+        if matchTokenInSet(currentToken, pathSet) == SymbolWord:
+            nextToken = currentTokens.pop() if len(currentTokens) > 0 else None
+            return (nextState, nextToken, currentTokens)
+    return None
+
+
+def tryConsumeWildCard(availableTransitions: IAvailableTransitions,
+                       currentToken: Optional[str], currentTokens: List[str]
+                       ) -> Optional[Tuple[int, Optional[str], List[str]]]:
+    # non-greedy wild card, we only use it when there is no other choice
+    for nextState, pathSet in availableTransitions.items():
+        if matchTokenInSet(currentToken, pathSet) == SymbolNumeric:
+            nextToken = currentTokens.pop() if len(currentTokens) > 0 else None
+            return (nextState, nextToken, currentTokens)
+        elif matchTokenInSet(currentToken, pathSet) == SymbolPunctuation:
+            nextToken = currentTokens.pop() if len(currentTokens) > 0 else None
+            return (nextState, nextToken, currentTokens)
+        elif matchTokenInSet(currentToken, pathSet) == SymbolWildcard:
+            nextToken = currentTokens.pop() if len(currentTokens) > 0 else None
+            return (nextState, nextToken, currentTokens)
+    return None
+
+
+def executor(tokens, startState, finalStates,
+             transitions: Dict[int, IAvailableTransitions]):
     currentState: int = startState
     currentToken: Optional[str] = tokens.pop()
     while currentState not in finalStates:
         availableTransitions = transitions[currentState]
-        # search available transition in the first pass
-        for nextState, pathSet in availableTransitions.items():
-            if currentToken in pathSet:
-                currentState = nextState
-                currentToken = tokens.pop() if len(tokens) > 0 else None
-                break
-        else:
-            # non-greedy wild card, we only use it when there is no other choice
-            availableTransitions = transitions[currentState]
-            for nextState, pathSet in availableTransitions.items():
-                if '%' in pathSet and currentToken.isnumeric():
-                    currentState = nextState
-                    currentToken = tokens.pop() if len(tokens) > 0 else None
-                    break
-                elif '&' in pathSet and currentToken in punctuations:
-                    currentState = nextState
-                    currentToken = tokens.pop() if len(tokens) > 0 else None
-                    break
-                elif '$' in pathSet and not currentToken.isnumeric() and currentToken not in punctuations and currentToken != None:
-                    currentState = nextState
-                    currentToken = tokens.pop() if len(tokens) > 0 else None
-                    break
+        # count if we have ambiguous situation, since wildcard can make DFA sometimes actually a NFA
+        availablePathCount = 0
+        for _, pathSet in availableTransitions.items():
+            if matchTokenInSet(currentToken, pathSet):
+                availablePathCount += 1
+        # try consume a non wildcard matcher in rule first
+        matchingResult = tryConsumeNonWildCard(transitions[currentState],
+                                               currentToken, tokens)
+        if availablePathCount > 1 and matchingResult != None:
+            # it is ambiguous now
+            # try go on, and see if consume a non wildcard matcher is a right choice
+            # (currentState, currentToken, tokens) = matchingResult
+            if matchingResult[1] == None:
+                return False
+            initialStateToTry = matchingResult[0]
+            tokensToTry = matchingResult[2] + [cast(str, matchingResult[1])]
+            if executor(tokensToTry, initialStateToTry, finalStates,
+                        transitions):
+                return True
             else:
+                matchingResult = None
+        if matchingResult == None:
+            matchingResult = tryConsumeWildCard(transitions[currentState],
+                                                currentToken, tokens)
+            if matchingResult == None:
                 return False  # sadly, no available transition for current token
+        (currentState, currentToken, tokens) = matchingResult
     return True
 
 
@@ -72,14 +136,11 @@ class NFAFromRegex:
 
     binaryOperators = [orOperator, concatOperator]
     unaryOperators = [starOperator, plusOperator]
-    openingBrackets = [
-        openingBracket, openingBrace
-    ]
-    closingBrackets = [
-        closingBracket, closingBrace
-    ]
-    allOperators = [initOperator
-                    ] + binaryOperators + unaryOperators + openingBrackets + closingBrackets
+    openingBrackets = [openingBracket, openingBrace]
+    closingBrackets = [closingBracket, closingBrace]
+    allOperators = [
+        initOperator
+    ] + binaryOperators + unaryOperators + openingBrackets + closingBrackets
 
     def __init__(self):
         pass
@@ -100,14 +161,16 @@ class NFAFromRegex:
             if token not in self.allOperators:
                 language.add(token)
                 # if previous automata is standalong (char or a group or so), we concat current automata with previous one
-                if ((previous not in self.allOperators) or
-                        previous in [self.closingBracket] + self.unaryOperators):
+                if ((previous not in self.allOperators)
+                        or previous in [self.closingBracket] +
+                        self.unaryOperators):
                     self.addOperatorToStack(self.concatOperator)
                 self.automata.append(BuildAutomata.characterStruct(token))
             elif token == self.openingBracket:
                 # concat current automata with previous one, same as above
-                if ((previous not in self.allOperators) or
-                        previous in [self.closingBracket] + self.unaryOperators):
+                if ((previous not in self.allOperators)
+                        or previous in [self.closingBracket] +
+                        self.unaryOperators):
                     self.addOperatorToStack(self.concatOperator)
                 self.stack.append(token)
             elif token == self.closingBracket:

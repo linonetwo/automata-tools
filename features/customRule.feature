@@ -33,3 +33,9 @@ Feature: Write Custom Rule
     Given the rule "( $ | & ) * and you are BBB $ *"
       Then it matches sentence "Wow, and you are AAA and you are BBB"
       And it matches sentence "Wow, and you are BBB"
+
+  Scenario: Use wildcard and word in a group
+    Given the rule "I may have ( $ + | you ) with me"
+      Then it matches sentence "I may have you with me"
+      And it matches sentence "I may have her with me"
+      And it matches sentence "I may have my little three with me"
