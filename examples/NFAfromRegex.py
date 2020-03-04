@@ -1,3 +1,8 @@
+import sys
+import os
+_project_root = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+sys.path.append(os.path.join(_project_root, 'src'))
+
 from automata_tools.BuildAutomata import BuildAutomata
 
 

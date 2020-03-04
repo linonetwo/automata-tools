@@ -4,7 +4,7 @@
     "matmul",
     "pyparsing"
   ],
-  "python.autoComplete.extraPaths": ["./"],
+  "python.autoComplete.extraPaths": ["./", "./src", "./src/automata_tools", "./examples", "./features"],
   "python.pythonPath": "/opt/anaconda3/envs/automataTools/bin/python",
   "python.envFile": "${workspaceFolder}/.env",
   "python.linting.pylintEnabled": true,
