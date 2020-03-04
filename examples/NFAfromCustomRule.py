@@ -20,16 +20,14 @@ def tokenizer(input: str):
     return [item for item in tokens if item]
 def executor(tokens, startState, finalStates, transitions):
     currentState: int = startState
-    currentToken: str = tokens.pop()
+    currentToken: Optional[str] = tokens.pop()
     while currentState not in finalStates:
-        if len(tokens) == 0:
-            return False
         availableTransitions = transitions[currentState]
         # search available transition in the first pass
         for nextState, pathSet in availableTransitions.items():
             if currentToken in pathSet:
                 currentState = nextState
-                currentToken = tokens.pop()
+                currentToken = tokens.pop() if len(tokens) > 0 else None
                 break
         else:
             # non-greedy wild card, we only use it when there is no other choice
@@ -37,15 +35,15 @@ def executor(tokens, startState, finalStates, transitions):
             for nextState, pathSet in availableTransitions.items():
                 if '%' in pathSet and currentToken.isnumeric():
                     currentState = nextState
-                    currentToken = tokens.pop()
+                    currentToken = tokens.pop() if len(tokens) > 0 else None
                     break
                 elif '&' in pathSet and currentToken in punctuations:
                     currentState = nextState
-                    currentToken = tokens.pop()
+                    currentToken = tokens.pop() if len(tokens) > 0 else None
                     break
-                elif '$' in pathSet:
+                elif '$' in pathSet and currentToken != None:
                     currentState = nextState
-                    currentToken = tokens.pop()
+                    currentToken = tokens.pop() if len(tokens) > 0 else None
                     break
             else:
                 return False  # sadly, no available transition for current token
