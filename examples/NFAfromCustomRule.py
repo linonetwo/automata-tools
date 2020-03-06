@@ -12,7 +12,7 @@ from customRuleTokenizer import ruleParser
 
 punctuations = [
     ',', '，', ':', '：', '!', '！', '《', '》', '。', '；', '.', '(', ')', '（', '）',
-    '|'
+    '|', '?', '"'
 ]
 
 
@@ -128,6 +128,7 @@ class NFAFromRegex:
 
     starOperator = '*'
     plusOperator = '+'
+    questionOperator = '?'
     concatOperator = '.'
     orOperator = '|'
     initOperator = '::e::'
@@ -137,7 +138,7 @@ class NFAFromRegex:
     closingBrace = '}'
 
     binaryOperators = [orOperator, concatOperator]
-    unaryOperators = [starOperator, plusOperator]
+    unaryOperators = [starOperator, plusOperator, questionOperator]
     openingBrackets = [openingBracket, openingBrace]
     closingBrackets = [closingBracket, closingBrace]
     allOperators = [
@@ -200,12 +201,7 @@ class NFAFromRegex:
                 self.processOperator(self.closingBrace, payload)
                 index += 1
                 continue
-            elif token == self.starOperator:
-                if previous in self.binaryOperators + self.openingBrackets + self.unaryOperators:
-                    raise BaseException(
-                        f"Error processing {token} after {previous}")
-                self.processOperator(token)
-            elif token == self.plusOperator:
+            elif token in self.unaryOperators:
                 if previous in self.binaryOperators + self.openingBrackets + self.unaryOperators:
                     raise BaseException(
                         f"Error processing {token} after {previous}")
@@ -252,6 +248,9 @@ class NFAFromRegex:
         if operator == self.starOperator:
             a = self.automata.pop()
             self.automata.append(BuildAutomata.starStruct(a))
+        elif operator == self.questionOperator:
+            a = self.automata.pop()
+            self.automata.append(BuildAutomata.skipStruct(a))
         elif operator == self.plusOperator:
             a = self.automata.pop()
             moreA = BuildAutomata.starStruct(a)

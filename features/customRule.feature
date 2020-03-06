@@ -30,6 +30,13 @@ Feature: Write Custom Rule
       Then it matches sentence "Ouch aaa aaa aaa aaa bbb cool!"
       And it won't match sentence "Ouch bbb cool!"
       And it won't match sentence "Ouch aaa"
+    Given the rule "what (is|does it?|did) it? (do|did) &"
+      Then it matches sentence "what did it do?"
+      Then it matches sentence "what does it did?"
+      Then it matches sentence "what does do?"
+      Then it matches sentence "what is it did."
+      And it won't match sentence "what does it it it do?"
+      And it won't match sentence "what is it it did?"
 
   Scenario: Find text with none greedy behavior
     Given the rule "($|&)* and you are BBB $*"
