@@ -2,11 +2,13 @@ import sys
 import os
 _project_root = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(os.path.join(_project_root, 'src'))
+sys.path.append(os.path.join(_project_root, 'examples'))
 
 from typing import Optional, List, Tuple, Dict, Set, cast
 import re
 
 from automata_tools import BuildAutomata, Automata
+from customRuleTokenizer import ruleParser
 
 punctuations = [
     ',', '，', ':', '：', '!', '！', '《', '》', '。', '；', '.', '(', ')', '（', '）',
@@ -149,15 +151,15 @@ class NFAFromRegex:
     def displayNFA(nfa: Automata):
         nfa.display()
 
-    def buildNFA(self, regex: str):
+    def buildNFA(self, rule: str):
         language = set()
         self.stack = []
         self.automata = []
         previous = self.initOperator
-        tokens = regex.split()
+        ruleTokens = ruleParser(rule)
         index = 0
-        while index < len(tokens):
-            token = tokens[index]
+        while index < len(ruleTokens):
+            token = ruleTokens[index]
             if token not in self.allOperators:
                 language.add(token)
                 # if previous automata is standalong (char or a group or so), we concat current automata with previous one
@@ -192,8 +194,8 @@ class NFAFromRegex:
                 continue
             elif token == self.closingBrace:
                 # to handle { 0 , 2 } , we get "0" and "2"
-                repeatRangeStart = tokens[index - 3]
-                repeatRangeEnd = tokens[index - 1]
+                repeatRangeStart = ruleTokens[index - 3]
+                repeatRangeEnd = ruleTokens[index - 1]
                 payload = (repeatRangeStart, repeatRangeEnd)
                 self.processOperator(self.closingBrace, payload)
                 index += 1
