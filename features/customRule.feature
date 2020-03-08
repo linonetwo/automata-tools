@@ -15,6 +15,8 @@ Feature: Write Custom Rule
       Then it matches sentence "well, I think punctuations are cool!"
       And it matches sentence "Wow, I think your are using, punctuations!"
       And it matches sentence "Wow, I think app is really, a big thing."
+    Given the rule "($ * ( thanks & | thanks ) I think (&|$)*)"
+      Then it matches sentence "ha ha thanks. I think punctuations are cool!"
 
   Scenario: Find text with repeated words
     Given the rule "$* aaa{2,4} bbb $*"
