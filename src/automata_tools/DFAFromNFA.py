@@ -5,14 +5,14 @@ class DFAFromNFA:
     """
     Building dfa from e-nfa and minimise it
     """
-    def __init__(self, nfa):
+    def __init__(self, nfa: Automata):
         self.buildDFA(nfa)
         self.minimise()
 
-    def getDFA(self):
+    def getDFA(self) -> Automata:
         return self.dfa
 
-    def getMinimizedDFA(self):
+    def getMinimizedDFA(self) -> Automata:
         return self.minDFA
 
     def displayDFA(self):
