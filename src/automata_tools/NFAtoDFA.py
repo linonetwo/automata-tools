@@ -15,7 +15,7 @@ def NFAtoDFA(nfa: Automata) -> Automata:
     while len(states) != 0:
         [state, fromindex] = states.pop()
         for char in dfa.language:
-            trstates = nfa.gettransitions(state, char)
+            trstates = nfa.getReachableStates(state, char)
             for s in list(trstates)[:]:
                 if s not in eclose:
                     eclose[s] = nfa.getEClosure(s)

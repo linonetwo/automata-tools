@@ -78,7 +78,10 @@ class Automata:
             for state in tostates:
                 self.addtransition(fromstate, state, tostates[state])
 
-    def gettransitions(self, states: Union[int, List[int]], token: str):
+    def getReachableStates(self, states: Union[int, List[int]], token: str):
+        """
+        获取某个状态给定一个字符可以到达的所有状态，在 NFA 中会有多个，DFA 中应该只有一个，以 Set[int] 的形式返回
+        """
         if isinstance(states, int):
             states = [states]
         transitionsOfCurrentState: Set[int] = set()
