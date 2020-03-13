@@ -74,6 +74,7 @@ def tryConsumeWildCard(availableTransitions: IAvailableTransitions,
             nextToken = currentTokens.pop(0) if len(currentTokens) > 0 else None
             return (nextState, nextToken, currentTokens)
         elif matchTokenInSet(currentToken, pathSet) == SymbolWildcard:
+            print(currentToken, currentTokens, availableTransitions, nextState)
             nextToken = currentTokens.pop(0) if len(currentTokens) > 0 else None
             return (nextState, nextToken, currentTokens)
     return None
@@ -93,6 +94,9 @@ def executor(tokens, startState, finalStates,
         # try consume a non wildcard matcher in rule first
         matchingResult = tryConsumeNonWildCard(transitions[currentState],
                                                currentToken, tokens)
+        if matchingResult and matchingResult[0] in finalStates:
+            return True
+
         if availablePathCount > 1 and matchingResult != None:
             # it is ambiguous now
             # try go on, and see if consume a non wildcard matcher is a right choice

@@ -6,22 +6,23 @@ sys.path.append(_project_root)
 import time
 
 from examples.NFAfromCustomRule import NFAFromRegex, executor, tokenizer
-from automata_tools import DFAFromNFA, BuildAutomata, drawGraph, isInstalled
+from examples.customRuleDFAToTensor import dfa_to_tensor
+from examples.customRuleTokenizer import ruleParser
+from automata_tools import DFAtoMinimizedDFA, NFAtoDFA, WFA, get_word_to_index, drawGraph, isInstalled
 
 def main():
-    input = "( $ | & ) * and you are BBB $ *"
-    if len(sys.argv) > 1:
-        input = sys.argv[1]
-
-    print("Regular Expression: ", input)
-    nfa = NFAFromRegex().buildNFA(input)
-    dfaObj = DFAFromNFA(nfa)
-    dfa = dfaObj.getDFA()
-    minDFA = dfaObj.getMinimizedDFA()
-    
+    rule = "($* ( ccc | what ) $* bbb $*)|($* ccc $*)"
+    nfa = NFAFromRegex().buildNFA(rule)
+    dfa = NFAtoDFA(nfa)
+    minDFA = DFAtoMinimizedDFA(dfa)
     minDFA.setExecuter(executor)
     minDFA.setTokenizer(tokenizer)
-    print(minDFA.execute("Wow, and you are AAA and you are BBB"))
+    # print(minDFA.execute("aaa bbb"))
+    textInput = "what is the abbreviated expression for the national bureau of investigation ?"
+    print(minDFA.execute(textInput))
+    _, wordToIndex = get_word_to_index([ruleParser(rule), tokenizer(textInput)])
+    wfa = WFA(minDFA, wordToIndex, dfa_to_tensor)
+    print(wfa.execute(textInput))
     # print("\nNFA: ")
     # nfaObj.displayNFA()
     # print("\nDFA: ")
