@@ -35,7 +35,7 @@ Build simple `(0)-[a]->(1)` automata
 automata.append(BuildAutomata.characterStruct(char))
 ```
 
-### unionStruct
+#### unionStruct
 
 Build automata that is an "or" of two sub-automata `(1)<-[a]-(0)-[b]->(1)`
 
@@ -47,7 +47,7 @@ if operator == "|":
     automata.append(BuildAutomata.unionStruct(b, a))
 ```
 
-### concatenationStruct
+#### concatenationStruct
 
 Build automata that is an "and" of two sub-automata `(0)-[a]->(1)-[b]->(2)`
 
@@ -58,7 +58,7 @@ b = automata.pop()
 automata.append(BuildAutomata.concatenationStruct(b, a))
 ```
 
-### starStruct
+#### starStruct
 
 Build automata that looks like the "Kleene closure"
 
@@ -69,7 +69,7 @@ if operator == "*":
     automata.append(BuildAutomata.starStruct(a))
 ```
 
-### skipStruct
+#### skipStruct
 
 Build automata that looks like the "Kleene closure" but without the loop back `(1)<-[ε]-(2)`, so it only match the token once at most.
 
@@ -80,7 +80,7 @@ if operator == "?":
     automata.append(BuildAutomata.skipStruct(a))
 ```
 
-### repeatRangeStruct
+#### repeatRangeStruct
 
 Build automata that will match the same token for several times `(0)-[a]->(1)-[a]->(2)-[a]->(3)`
 
@@ -89,7 +89,7 @@ Build automata that will match the same token for several times `(0)-[a]->(1)-[a
 repeatedAutomata = BuildAutomata.repeatStruct(automata, 3)
 ```
 
-### repeatStruct
+#### repeatStruct
 
 Build automata that will match the same token for n to m times
 
@@ -123,7 +123,7 @@ def executor(tokens, startState, finalStates, transitions):
     return True
 ```
 
-### setExecuter
+#### setExecuter
 
 Set an executor to the automata that can freely use state and transition of the automata, and return a boolean value.
 
@@ -134,13 +134,48 @@ defaultExecuter: IAutomataExecutor = lambda tokens, startState, finalStates, tra
 minDFA.setExecuter(defaultExecuter)
 ```
 
-### setTokenizer
+#### setTokenizer
 
 Set an tokenizer to the automata that can transform string to list of string token, which will be used by the executer.
 
 ```python
 minDFA.setExecuter(lambda input: input.split(' ')[::-1])
 ```
+
+### DFAFromNFA
+
+Allow you minify Automata state
+
+```python
+nfa = NFAFromRegex().buildNFA(rule)
+minDFA = DFAFromNFA(nfa).getMinimizedDFA()
+```
+
+### Waited Finite Automata
+
+WFA, it can execute automata use matrix multiplication, so it can be very fast compare to brute force execution, especially when state space is large.
+
+```python
+from automata_tools import WFA, get_word_to_index
+
+_, wordToIndex = get_word_to_index([ruleParser(context.rule), tokenizer(text)])
+wfa = WFA(minDFA, wordToIndex, dfa_to_tensor)
+wfa.execute(text)
+```
+
+#### get_word_to_index
+
+Given `[['token', 'another'], ['token_in_rule']]`, return something like
+
+```python
+{'token': 0, 'another': 1, ...}
+```
+
+So we can translate automata state to a matrix.
+
+#### WFA
+
+Given an automata, a word index like `{'token': 0, 'another': 1, ...}`, and a function that transform automata to tensor (see example at [customRuleDFAToTensor](examples/customRuleDFAToTensor.py)), return a WFA instance.
 
 ## Development
 
