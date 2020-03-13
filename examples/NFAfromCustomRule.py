@@ -151,7 +151,7 @@ class NFAFromRegex:
     def displayNFA(nfa: Automata):
         nfa.display()
 
-    def buildNFA(self, rule: str):
+    def buildNFA(self, rule: str) -> Automata:
         language = set()
         self.stack = []
         self.automata = []
