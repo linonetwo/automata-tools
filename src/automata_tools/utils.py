@@ -1,4 +1,6 @@
 import os
+from collections import Counter
+from typing import List
 
 
 def drawGraph(
@@ -32,3 +34,13 @@ def isInstalled(program):
             if is_exe(exe_file) or is_exe(exe_file + ".exe"):
                 return True
     return False
+
+def get_word_to_index(texts: List[List[str]]):
+    vocab = Counter()
+    for text in texts:
+        vocab += Counter(text)
+    vocabList = list(vocab.keys())
+    indexToWord = {idx: vocab for idx, vocab in enumerate(vocabList)}
+    wordToIndex = {vocab: idx for idx, vocab in enumerate(vocabList)}
+
+    return indexToWord, wordToIndex
