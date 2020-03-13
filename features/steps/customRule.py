@@ -3,12 +3,12 @@ from behave import given, then
 from examples.NFAfromCustomRule import NFAFromRegex, executor, tokenizer
 from examples.customRuleDFAToTensor import dfa_to_tensor
 from examples.customRuleTokenizer import ruleParser
-from automata_tools import DFAFromNFA, WFA, get_word_to_index
+from automata_tools import DFAtoMinimizedDFA, NFAtoDFA, WFA, get_word_to_index
 
 @given('the rule "{rule}"')
 def getRule(context, rule):
     nfa = NFAFromRegex().buildNFA(rule)
-    minDFA = DFAFromNFA(nfa).getMinimizedDFA()
+    minDFA = DFAtoMinimizedDFA(NFAtoDFA(nfa))
     minDFA.setExecuter(executor)
     minDFA.setTokenizer(tokenizer)
     context.minDFA = minDFA

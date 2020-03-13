@@ -142,13 +142,22 @@ Set an tokenizer to the automata that can transform string to list of string tok
 minDFA.setExecuter(lambda input: input.split(' ')[::-1])
 ```
 
-### DFAFromNFA
+### NFAtoDFA
+
+Make automata state transitions not so ambiguous
+
+```python
+nfa = NFAFromRegex().buildNFA(rule)
+dfa = NFAtoDFA(nfa)
+```
+
+### DFAtoMinimizedDFA
 
 Allow you minify Automata state
 
 ```python
 nfa = NFAFromRegex().buildNFA(rule)
-minDFA = DFAFromNFA(nfa).getMinimizedDFA()
+minDFA = DFAtoMinimizedDFA(NFAtoDFA(nfa))
 ```
 
 ### Weighted Finite Automata
