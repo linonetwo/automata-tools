@@ -19,7 +19,7 @@ class Automata:
 
         defaultExecuter: IAutomataExecutor = lambda tokens, startState, finalStates, transitions: True
         self.executer = defaultExecuter
-        self.tokenizer = lambda input: input.split(' ')[::-1]
+        self.tokenizer = lambda input: input.split(' ')
 
     def setExecuter(self, executerFunction: IAutomataExecutor):
         self.executer = executerFunction

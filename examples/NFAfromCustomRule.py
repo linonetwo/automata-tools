@@ -25,7 +25,7 @@ def padPunctuations(shortString: str):
 
 def tokenizer(input: str):
     inputWithPunctuationsPaddedWithSpace = padPunctuations(input)
-    tokens = inputWithPunctuationsPaddedWithSpace.split(' ')[::-1]
+    tokens = inputWithPunctuationsPaddedWithSpace.split(' ')
     return [item for item in tokens if item]
 
 
@@ -58,7 +58,7 @@ def tryConsumeNonWildCard(availableTransitions: IAvailableTransitions,
     # search available transition in the first pass
     for nextState, pathSet in availableTransitions.items():
         if matchTokenInSet(currentToken, pathSet) == SymbolWord:
-            nextToken = currentTokens.pop() if len(currentTokens) > 0 else None
+            nextToken = currentTokens.pop(0) if len(currentTokens) > 0 else None
             return (nextState, nextToken, currentTokens)
     return None
 
@@ -69,13 +69,13 @@ def tryConsumeWildCard(availableTransitions: IAvailableTransitions,
     # non-greedy wild card, we only use it when there is no other choice
     for nextState, pathSet in availableTransitions.items():
         if matchTokenInSet(currentToken, pathSet) == SymbolNumeric:
-            nextToken = currentTokens.pop() if len(currentTokens) > 0 else None
+            nextToken = currentTokens.pop(0) if len(currentTokens) > 0 else None
             return (nextState, nextToken, currentTokens)
         elif matchTokenInSet(currentToken, pathSet) == SymbolPunctuation:
-            nextToken = currentTokens.pop() if len(currentTokens) > 0 else None
+            nextToken = currentTokens.pop(0) if len(currentTokens) > 0 else None
             return (nextState, nextToken, currentTokens)
         elif matchTokenInSet(currentToken, pathSet) == SymbolWildcard:
-            nextToken = currentTokens.pop() if len(currentTokens) > 0 else None
+            nextToken = currentTokens.pop(0) if len(currentTokens) > 0 else None
             return (nextState, nextToken, currentTokens)
     return None
 
@@ -83,7 +83,8 @@ def tryConsumeWildCard(availableTransitions: IAvailableTransitions,
 def executor(tokens, startState, finalStates,
              transitions: Dict[int, IAvailableTransitions]):
     currentState: int = startState
-    currentToken: Optional[str] = tokens.pop()
+    print(tokens)
+    currentToken: Optional[str] = tokens.pop(0)
     while currentState not in finalStates:
         availableTransitions = transitions[currentState]
         # count if we have ambiguous situation, since wildcard can make DFA sometimes actually a NFA
@@ -101,7 +102,7 @@ def executor(tokens, startState, finalStates,
             if matchingResult[1] == None:
                 return False
             initialStateToTry = matchingResult[0]
-            tokensToTry = matchingResult[2] + [cast(str, matchingResult[1])]
+            tokensToTry = [cast(str, matchingResult[1])] + matchingResult[2]
             if executor(tokensToTry, initialStateToTry, finalStates,
                         transitions):
                 return True
