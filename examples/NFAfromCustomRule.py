@@ -42,12 +42,11 @@ def matchTokenInSet(token: Optional[str], acceptTokens: Set[str]):
         return None
     if token in acceptTokens:
         return SymbolWord
-    elif '%' in acceptTokens and token.isnumeric():
+    elif '%' in acceptTokens and token.replace('.', '', 1).isdigit():
         return SymbolNumeric
     elif '&' in acceptTokens and token in punctuations:
         return SymbolPunctuation
-    elif '$' in acceptTokens and not token.isnumeric(
-    ) and token not in punctuations:
+    elif '$' in acceptTokens and not token.replace('.', '', 1).isdigit() and token not in punctuations:
         return SymbolWildcard
     return None
 
@@ -83,7 +82,6 @@ def tryConsumeWildCard(availableTransitions: IAvailableTransitions,
 def executor(tokens, startState, finalStates,
              transitions: Dict[int, IAvailableTransitions]):
     currentState: int = startState
-    print(tokens)
     currentToken: Optional[str] = tokens.pop(0)
     while currentState not in finalStates:
         availableTransitions = transitions[currentState]
