@@ -151,7 +151,7 @@ nfa = NFAFromRegex().buildNFA(rule)
 minDFA = DFAFromNFA(nfa).getMinimizedDFA()
 ```
 
-### Waited Finite Automata
+### Weighted Finite Automata
 
 WFA, it can execute automata use matrix multiplication, so it can be very fast compare to brute force execution, especially when state space is large.
 
@@ -199,7 +199,7 @@ Create a `.env` file with content `PYTHONPATH=automataTools`
 To pypi
 
 ```shell
-rm -rf ./dist && python3 setup.py sdist bdist_wheel && twine upload dist/*
+rm -rf ./dist && rm -rf ./build && rm -rf ./automata_tools.egg-info && python3 setup.py sdist bdist_wheel && twine upload dist/*
 ```
 
 To Conda
