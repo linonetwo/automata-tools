@@ -10,6 +10,12 @@ Feature: Write Custom Rule
       And it matches sentence "aaa bbb"
       But it won't match sentence "oh my aaa is mine!"
 
+  Scenario: Use group and or
+    Given the rule "ggg (aaa | bbb) ccc"
+      Then it matches sentence "ggg aaa ccc"
+      And it matches sentence "ggg bbb ccc"
+      But it won't match sentence "ggg aaa bbb ccc"
+
   Scenario: Custom tokenizer can split word and punctuations, so we can make & to stand for punctuations in our rules
     Given the rule "$* & I think $ (are|is ) $&$*"
       Then it matches sentence "well, I think punctuations are cool!"
