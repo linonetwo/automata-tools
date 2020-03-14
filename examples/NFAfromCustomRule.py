@@ -74,7 +74,6 @@ def tryConsumeWildCard(availableTransitions: IAvailableTransitions,
             nextToken = currentTokens.pop(0) if len(currentTokens) > 0 else None
             return (nextState, nextToken, currentTokens)
         elif matchTokenInSet(currentToken, pathSet) == SymbolWildcard:
-            print(currentToken, currentTokens, availableTransitions, nextState)
             nextToken = currentTokens.pop(0) if len(currentTokens) > 0 else None
             return (nextState, nextToken, currentTokens)
     return None
