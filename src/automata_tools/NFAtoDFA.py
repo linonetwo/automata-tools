@@ -14,7 +14,7 @@ def NFAtoDFA(nfa: Automata) -> Automata:
     count += 1
     while len(states) != 0:
         [state, fromindex] = states.pop()
-        for char in dfa.language:
+        for char in sorted(dfa.language):
             trstates = nfa.getReachableStates(state, char)
             for s in list(trstates)[:]:
                 if s not in eclose:
@@ -28,10 +28,10 @@ def NFAtoDFA(nfa: Automata) -> Automata:
                     count += 1
                 else:
                     toindex = [
-                        k for k, v in allstates.items() if v == trstates
+                        k for k, v in sorted(allstates.items()) if v == trstates
                     ][0]
                 dfa.addtransition(fromindex, toindex, char)
-    for value, state in allstates.items():
+    for value, state in sorted(allstates.items()):
         if nfa.finalstates[0] in state:
             dfa.addfinalstates(value)
     return dfa
