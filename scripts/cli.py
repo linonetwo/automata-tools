@@ -8,17 +8,18 @@ import time
 from examples.NFAfromCustomRule import NFAFromRegex, executor, tokenizer
 from examples.customRuleDFAToTensor import dfa_to_tensor
 from examples.customRuleTokenizer import ruleParser
-from automata_tools import DFAtoMinimizedDFA, NFAtoDFA, WFA, get_word_to_index, drawGraph, isInstalled
+from src.automata_tools import DFAtoMinimizedDFA, NFAtoDFA, WFA, get_word_to_index, drawGraph, isInstalled
 
 def main():
-    rule = "($* ( ccc | what ) $* bbb $*)|($* ccc $*)"
+    rule = "(a(bb|b)c)d"
     nfa = NFAFromRegex().buildNFA(rule)
+    print(nfa)
     dfa = NFAtoDFA(nfa)
     minDFA = DFAtoMinimizedDFA(dfa)
     minDFA.setExecuter(executor)
     minDFA.setTokenizer(tokenizer)
     # print(minDFA.execute("aaa bbb"))
-    textInput = "what is the abbreviated expression for the national bureau of investigation ?"
+    textInput = "a bb c"
     print(minDFA.execute(textInput))
     _, wordToIndex = get_word_to_index([ruleParser(rule), tokenizer(textInput)])
     wfa = WFA(minDFA, wordToIndex, dfa_to_tensor)

@@ -1,16 +1,39 @@
 from typing import Set, Dict, Optional, List, Callable, Union
+from pydash import flatten, uniq
 
 from automata_tools.constants import EPSILON
 
 IAutomataTransitions = Dict[int, Dict[int, Set[str]]]
-IAutomataExecutor = Callable[[List[str], int, List[int], IAutomataTransitions], bool]
+IAutomataExecutor = Callable[[List[str], int, List[int], IAutomataTransitions],
+                             bool]
+
+
+class GroupMetadata:
+    def __init__(self, stateNumbers: List[int], groupName: str = ''):
+        self.stateNumbers = stateNumbers
+        self.groupName = groupName
+
+    def toString(self):
+        return f"Group{self.groupName}{self.stateNumbers}"
+
+    def __str__(self):
+        return self.toString()
+
+    def __repr__(self):
+        return self.toString()
+
+    def __eq__(self, other):
+        return self.toString() == other.toString()
+
 
 class Automata:
     """class to represent an Automata"""
 
     executer: IAutomataExecutor
     tokenizer: Callable[[str], List[str]]
-    def __init__(self, language=set(['0', '1'])):
+
+    def __init__(self, language=set(['0', '1']), groups: Optional[List[GroupMetadata]] = []):
+        print('groups', groups)
         self.states: Set[int] = set()
         self.startstate: Optional[int] = None
         self.finalstates: List[int] = []
@@ -20,6 +43,17 @@ class Automata:
         defaultExecuter: IAutomataExecutor = lambda tokens, startState, finalStates, transitions: True
         self.executer = defaultExecuter
         self.tokenizer = lambda input: input.split(' ')
+        self.groups: List[GroupMetadata] = groups
+
+    def toString(self):
+        groupInfo = f',groups:{self.groups}' if self.groups else ''
+        return f"Automata{{states:{self.states}{groupInfo}}}"
+
+    def __str__(self):
+        return self.toString()
+
+    def __repr__(self):
+        return self.toString()
 
     def setExecuter(self, executerFunction: IAutomataExecutor):
         self.executer = executerFunction
@@ -32,11 +66,28 @@ class Automata:
         test whether input string can let automata go from initial state to final state
         """
         if not isinstance(self.startstate, int):
-            raise BaseException("startstate is not a interger, please init this automata properly")
+            raise BaseException(
+                "startstate is not a interger, please init this automata properly"
+            )
         if not callable(self.executer):
-            raise BaseException("executer is not a Function, please use setExecuter to set a valid function")
+            raise BaseException(
+                "executer is not a Function, please use setExecuter to set a valid function"
+            )
         tokens = self.tokenizer(input)
-        return self.executer(tokens, self.startstate, self.finalstates, self.transitions)
+        return self.executer(tokens, self.startstate, self.finalstates,
+                             self.transitions)
+
+    def setAsGroup(self):
+        """
+        If we have build a big automata, and wants to annotate it as a "(xxxx)" group, use this
+        """
+        self.groups.append(GroupMetadata(list(self.states)))
+
+    def addGroups(self, groups: Union[GroupMetadata, List[GroupMetadata]]):
+        """
+        After we build a concanated automata, we can add group metadata of child automata into it.
+        """
+        self.groups = uniq(self.groups + flatten([groups]))
 
     def to_dict(self):
         return {
@@ -160,15 +211,21 @@ class Automata:
         for i in list(self.states):
             translations[i] = startStateNumber
             startStateNumber += 1
-        combinedAutomata = Automata(self.language)
-        combinedAutomata.setstartstate(translations[self.startstate])
-        combinedAutomata.addfinalstates(translations[self.finalstates[0]])
+        newAutomata = Automata(self.language)
+        newAutomata.setstartstate(translations[self.startstate])
+        newAutomata.addfinalstates(translations[self.finalstates[0]])
         for fromstate, tostates in self.transitions.items():
             for state in tostates:
-                combinedAutomata.addtransition(translations[fromstate],
-                                               translations[state],
-                                               tostates[state])
-        return [combinedAutomata, startStateNumber]
+                newAutomata.addtransition(translations[fromstate],
+                                          translations[state], tostates[state])
+        newGroups = []
+        for group in self.groups:
+            print(self.states)
+            mappedGroupStates = list(
+                map(lambda stateID: translations[stateID], group.stateNumbers))
+            newGroups.append(GroupMetadata(mappedGroupStates, group.groupName))
+        newAutomata.addGroups(newGroups)
+        return [newAutomata, startStateNumber]
 
     def newBuildFromEquivalentStates(self, equivalent, pos):
         """

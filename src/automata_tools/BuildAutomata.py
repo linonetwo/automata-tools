@@ -49,18 +49,20 @@ class BuildAutomata:
         CREATE (0)-[a]->(1)-[b]->(2)
         """
         state1 = 1
+        print(leftAutomata)
         [leftAutomata, middleState1] = leftAutomata.withNewStateNumber(1)
         [rightAutomata,
          middleState2] = rightAutomata.withNewStateNumber(middleState1)
         state2 = middleState2 - 1
-        dot = Automata()
-        dot.setstartstate(state1)
-        dot.addfinalstates(state2)
-        dot.addtransition(leftAutomata.finalstates[0],
+        ConcanatedAutomata = Automata()
+        ConcanatedAutomata.setstartstate(state1)
+        ConcanatedAutomata.addfinalstates(state2)
+        ConcanatedAutomata.addtransition(leftAutomata.finalstates[0],
                           cast(int, rightAutomata.startstate), EPSILON)
-        dot.addtransition_dict(leftAutomata.transitions)
-        dot.addtransition_dict(rightAutomata.transitions)
-        return dot
+        ConcanatedAutomata.addtransition_dict(leftAutomata.transitions)
+        ConcanatedAutomata.addtransition_dict(rightAutomata.transitions)
+        ConcanatedAutomata.addGroups(leftAutomata.groups + rightAutomata.groups)
+        return ConcanatedAutomata
 
     @staticmethod
     def starStruct(inputAutomata: Automata):

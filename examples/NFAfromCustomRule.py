@@ -7,7 +7,7 @@ sys.path.append(os.path.join(_project_root, 'examples'))
 from typing import Optional, List, Tuple, Dict, Set, cast
 import re
 
-from automata_tools import BuildAutomata, Automata
+from src.automata_tools import BuildAutomata, Automata
 from customRuleTokenizer import ruleParser
 
 punctuations = [
@@ -124,14 +124,14 @@ class NFAFromRegex:
     """
 
     #: 存放 + * 等特殊符号的栈
-    stack: List[str] = []
+    operatorStack: List[str] = []
     #: 存放子自动机的栈
-    automata: List[Automata] = []
+    automataStack: List[Automata] = []
 
     starOperator = '*'
     plusOperator = '+'
     questionOperator = '?'
-    concatOperator = '.'
+    concatOperator = 'Symbol("concat")'
     orOperator = '|'
     initOperator = '::e::'
     openingBracket = '('
@@ -156,8 +156,8 @@ class NFAFromRegex:
 
     def buildNFA(self, rule: str) -> Automata:
         language = set()
-        self.stack = []
-        self.automata = []
+        self.operatorStack = []
+        self.automataStack = []
         previous = self.initOperator
         ruleTokens = ruleParser(rule)
         index = 0
@@ -168,29 +168,34 @@ class NFAFromRegex:
                 # if previous automata is standalong (char or a group or so), we concat current automata with previous one
                 if ((previous not in self.allOperators)
                         or previous in [self.closingBracket] +
-                        self.unaryOperators):
+                        self.unaryOperators): # previous is regular token or is not in (self.allOperators - ([self.closingBracket] + self.unaryOperators))
                     self.addOperatorToStack(self.concatOperator)
-                self.automata.append(BuildAutomata.characterStruct(token))
-            elif token == self.openingBracket:
+                self.automataStack.append(BuildAutomata.characterStruct(token))
+            elif token == self.openingBracket: # "("
                 # concat current automata with previous one, same as above
                 if ((previous not in self.allOperators)
                         or previous in [self.closingBracket] +
                         self.unaryOperators):
                     self.addOperatorToStack(self.concatOperator)
-                self.stack.append(token)
-            elif token == self.closingBracket:
+                self.operatorStack.append(token)
+            elif token == self.closingBracket: # ")"
+                # print('previous', previous)
                 if previous in self.binaryOperators:
                     raise BaseException(
                         f"Error processing {token} after {previous}")
-                while (1):
-                    if len(self.stack) == 0:
+                while (1): # grouping all child-automata in the stack into a big child-automata, which represents the group
+                    if len(self.operatorStack) == 0:
                         raise BaseException(
                             f"Error processing {token}. Empty stack")
-                    o = self.stack.pop()
-                    if o == self.openingBracket:
-                        break
-                    elif o in self.binaryOperators:
-                        self.processOperator(o)
+                    operatorWithinGroup = self.operatorStack.pop()
+                    # basically, operatorWithinGroup will only be binaryOperators or "("
+                    if operatorWithinGroup in self.binaryOperators:
+                        self.processOperator(operatorWithinGroup)
+                    elif operatorWithinGroup == self.openingBracket:
+                        break # this means we have process all the operators inside this group, maybe not outer group 1 in "(1(2))", but that will be deal with when we come to next ")"
+                print('bbb')
+                self.automataStack[-1].setAsGroup()
+                # print('self.automataStack', self.automataStack)
             elif token == self.openingBrace:
                 # to handle { 0 , 2 } , we jump to "}"
                 index += 4
@@ -217,63 +222,63 @@ class NFAFromRegex:
                 raise BaseException(f"Symbol {token} is not allowed")
             previous = token
             index += 1
-        while len(self.stack) != 0:
-            op = self.stack.pop()
+        while len(self.operatorStack) != 0:
+            op = self.operatorStack.pop()
             self.processOperator(op)
-        if len(self.automata) > 1:
-            print(self.automata)
+        if len(self.automataStack) > 1:
+            print(self.automataStack)
             raise BaseException("Regex could not be parsed successfully")
-        nfa = self.automata.pop()
+        nfa = self.automataStack.pop()
         nfa.language = language
         return nfa
 
     def addOperatorToStack(self, char: str):
         while (1):
-            if len(self.stack) == 0:
+            if len(self.operatorStack) == 0:
                 break
-            top = self.stack[len(self.stack) - 1]
+            top = self.operatorStack[len(self.operatorStack) - 1]
             if top == self.openingBracket:
                 break
             if top == char or top == self.concatOperator:
-                op = self.stack.pop()
+                op = self.operatorStack.pop()
                 self.processOperator(op)
             else:
                 break
-        self.stack.append(char)
+        self.operatorStack.append(char)
 
     def processOperator(self,
                         operator,
                         payload: Optional[Tuple[str, str]] = None):
-        if len(self.automata) == 0:
+        if len(self.automataStack) == 0:
             raise BaseException(
                 f"Error processing operator {operator}. Stack is empty")
         if operator == self.starOperator:
-            a = self.automata.pop()
-            self.automata.append(BuildAutomata.starStruct(a))
+            a = self.automataStack.pop()
+            self.automataStack.append(BuildAutomata.starStruct(a))
         elif operator == self.questionOperator:
-            a = self.automata.pop()
-            self.automata.append(BuildAutomata.skipStruct(a))
+            a = self.automataStack.pop()
+            self.automataStack.append(BuildAutomata.skipStruct(a))
         elif operator == self.plusOperator:
-            a = self.automata.pop()
+            a = self.automataStack.pop()
             moreA = BuildAutomata.starStruct(a)
-            self.automata.append(BuildAutomata.concatenationStruct(a, moreA))
+            self.automataStack.append(BuildAutomata.concatenationStruct(a, moreA))
         elif operator == self.closingBrace:
             if payload == None:
                 raise BaseException(
                     f"Error processing operator {operator}. payload is None")
             repeatRangeStart, repeatRangeEnd = payload
-            automataToRepeat = self.automata.pop()
+            automataToRepeat = self.automataStack.pop()
             repeatedAutomata = BuildAutomata.repeatRangeStruct(
                 automataToRepeat, int(repeatRangeStart), int(repeatRangeEnd))
-            self.automata.append(repeatedAutomata)
+            self.automataStack.append(repeatedAutomata)
         elif operator in self.binaryOperators:
-            if len(self.automata) < 2:
+            if len(self.automataStack) < 2:
                 raise BaseException(
                     f"Error processing operator {operator}. Inadequate operands"
                 )
-            a = self.automata.pop()
-            b = self.automata.pop()
+            a = self.automataStack.pop()
+            b = self.automataStack.pop()
             if operator == self.orOperator:
-                self.automata.append(BuildAutomata.unionStruct(b, a))
+                self.automataStack.append(BuildAutomata.unionStruct(b, a))
             elif operator == self.concatOperator:
-                self.automata.append(BuildAutomata.concatenationStruct(b, a))
+                self.automataStack.append(BuildAutomata.concatenationStruct(b, a))
