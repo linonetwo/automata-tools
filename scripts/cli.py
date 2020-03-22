@@ -13,7 +13,6 @@ from src.automata_tools import DFAtoMinimizedDFA, NFAtoDFA, WFA, get_word_to_ind
 def main():
     rule = "(a(bb|b)c)d"
     nfa = NFAFromRegex().buildNFA(rule)
-    print(nfa)
     dfa = NFAtoDFA(nfa)
     minDFA = DFAtoMinimizedDFA(dfa)
     minDFA.setExecuter(executor)

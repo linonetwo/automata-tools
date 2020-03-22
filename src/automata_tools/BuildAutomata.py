@@ -49,7 +49,6 @@ class BuildAutomata:
         CREATE (0)-[a]->(1)-[b]->(2)
         """
         state1 = 1
-        print(leftAutomata)
         [leftAutomata, middleState1] = leftAutomata.withNewStateNumber(1)
         [rightAutomata,
          middleState2] = rightAutomata.withNewStateNumber(middleState1)

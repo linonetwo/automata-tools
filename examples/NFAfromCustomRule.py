@@ -193,7 +193,6 @@ class NFAFromRegex:
                         self.processOperator(operatorWithinGroup)
                     elif operatorWithinGroup == self.openingBracket:
                         break # this means we have process all the operators inside this group, maybe not outer group 1 in "(1(2))", but that will be deal with when we come to next ")"
-                print('bbb')
                 self.automataStack[-1].setAsGroup()
                 # print('self.automataStack', self.automataStack)
             elif token == self.openingBrace:

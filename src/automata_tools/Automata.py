@@ -31,19 +31,20 @@ class Automata:
 
     executer: IAutomataExecutor
     tokenizer: Callable[[str], List[str]]
+    language: Set[str] # used in DFAtoMinimizedDFA
+    groups: List[GroupMetadata] # used for "(xxx)" group match
 
-    def __init__(self, language=set(['0', '1']), groups: Optional[List[GroupMetadata]] = []):
-        print('groups', groups)
+    def __init__(self, language: Optional[Set[str]] = None, groups: Optional[List[GroupMetadata]] = None):
+        self.groups: List[GroupMetadata] = groups if groups != None else []
+        self.language = language if language != None else set()
         self.states: Set[int] = set()
         self.startstate: Optional[int] = None
         self.finalstates: List[int] = []
         self.transitions: IAutomataTransitions = dict()
-        self.language: Set[str] = language
 
         defaultExecuter: IAutomataExecutor = lambda tokens, startState, finalStates, transitions: True
         self.executer = defaultExecuter
         self.tokenizer = lambda input: input.split(' ')
-        self.groups: List[GroupMetadata] = groups
 
     def toString(self):
         groupInfo = f',groups:{self.groups}' if self.groups else ''
@@ -220,7 +221,6 @@ class Automata:
                                           translations[state], tostates[state])
         newGroups = []
         for group in self.groups:
-            print(self.states)
             mappedGroupStates = list(
                 map(lambda stateID: translations[stateID], group.stateNumbers))
             newGroups.append(GroupMetadata(mappedGroupStates, group.groupName))
