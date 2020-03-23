@@ -9,9 +9,19 @@ IAutomataExecutor = Callable[[List[str], int, List[int], IAutomataTransitions],
 
 
 class GroupMetadata:
+    stateNumbers: List[int]
     def __init__(self, stateNumbers: List[int], groupName: str = ''):
         self.stateNumbers = stateNumbers
+        self.stateNumbers.sort()
         self.groupName = groupName
+
+    @property
+    def startState(self):
+        return self.stateNumbers[0]
+
+    @property
+    def finalState(self):
+        return self.stateNumbers[-1]
 
     def toString(self):
         return f"Group{self.groupName}{self.stateNumbers}"
@@ -39,7 +49,7 @@ class Automata:
         self.language = language if language != None else set()
         self.states: Set[int] = set()
         self.startstate: Optional[int] = None
-        self.finalstates: List[int] = []
+        self.finalStates: List[int] = []
         self.transitions: IAutomataTransitions = dict()
 
         defaultExecuter: IAutomataExecutor = lambda tokens, startState, finalStates, transitions: True
@@ -48,7 +58,7 @@ class Automata:
 
     def toString(self):
         groupInfo = f',groups:{self.groups}' if self.groups else ''
-        return f"Automata{{states:{self.states}{groupInfo}}}"
+        return f"Automata{{states:{self.states}{groupInfo},transitions:{self.transitions},language:{self.language}}}"
 
     def __str__(self):
         return self.toString()
@@ -61,6 +71,9 @@ class Automata:
 
     def setTokenizer(self, tokenizerFunction: Callable[[str], List[str]]):
         self.tokenizer = tokenizerFunction
+
+    def setLanguage(self, newLanguage: Set[str]):
+        self.language = newLanguage
 
     def execute(self, input: str) -> bool:
         """
@@ -75,7 +88,7 @@ class Automata:
                 "executer is not a Function, please use setExecuter to set a valid function"
             )
         tokens = self.tokenizer(input)
-        return self.executer(tokens, self.startstate, self.finalstates,
+        return self.executer(tokens, self.startstate, self.finalStates,
                              self.transitions)
 
     def setAsGroup(self):
@@ -94,41 +107,41 @@ class Automata:
         return {
             'states': self.states,
             'startstate': self.startstate,
-            'finalstates': self.finalstates,
+            'finalStates': self.finalStates,
             'transitions': self.transitions,
             'language': self.language
         }
 
-    def setstartstate(self, state: int):
+    def setStartState(self, state: int):
         self.startstate = state
         self.states.add(state)
 
-    def addfinalstates(self, state: Union[int, List[int]]):
+    def addfinalStates(self, state: Union[int, List[int]]):
         if isinstance(state, int):
             state = [state]
         for s in state:
-            if s not in self.finalstates:
-                self.finalstates.append(s)
+            if s not in self.finalStates:
+                self.finalStates.append(s)
 
-    def addtransition(self, fromstate: int, tostate: int,
-                      inp: Union[str, Set[str]]):
-        if isinstance(inp, str):
-            inp = set([inp])
-        self.states.add(fromstate)
-        self.states.add(tostate)
-        if fromstate in self.transitions:
-            if tostate in self.transitions[fromstate]:
-                self.transitions[fromstate][tostate] = self.transitions[
-                    fromstate][tostate].union(inp)
+    def addTransition(self, fromState: int, toState: int,
+                      token: Union[str, Set[str]]):
+        if isinstance(token, str):
+            token = set([token])
+        self.states.add(fromState)
+        self.states.add(toState)
+        if fromState in self.transitions:
+            if toState in self.transitions[fromState]:
+                self.transitions[fromState][toState] = self.transitions[
+                    fromState][toState].union(token)
             else:
-                self.transitions[fromstate][tostate] = inp
+                self.transitions[fromState][toState] = token
         else:
-            self.transitions[fromstate] = {tostate: inp}
+            self.transitions[fromState] = {toState: token}
 
-    def addtransition_dict(self, transitions: IAutomataTransitions):
-        for fromstate, tostates in transitions.items():
-            for state in tostates:
-                self.addtransition(fromstate, state, tostates[state])
+    def addTransitionsByDict(self, transitions: IAutomataTransitions):
+        for fromState, toStates in transitions.items():
+            for state in toStates:
+                self.addTransition(fromState, state, toStates[state])
 
     def getReachableStates(self, states: Union[int, List[int]], token: str):
         """
@@ -165,25 +178,25 @@ class Automata:
     def display(self):
         print("states:", self.states)
         print("start state: ", self.startstate)
-        print("final states:", self.finalstates)
+        print("final states:", self.finalStates)
         print("transitions:")
-        for fromstate, tostates in self.transitions.items():
-            for state in tostates:
-                for char in tostates[state]:
-                    print("  ", fromstate, "->", state, "on '" + char + "'")
+        for fromState, toStates in self.transitions.items():
+            for state in toStates:
+                for char in toStates[state]:
+                    print("  ", fromState, "->", state, "on '" + char + "'")
 
     def getPrintText(self):
         text = "language: {" + ", ".join(self.language) + "}\n"
         text += "states: {" + ", ".join(map(str, self.states)) + "}\n"
         text += "start state: " + str(self.startstate) + "\n"
         text += "final states: {" + ", ".join(map(str,
-                                                  self.finalstates)) + "}\n"
+                                                  self.finalStates)) + "}\n"
         text += "transitions:\n"
         linecount = 5
-        for fromstate, tostates in self.transitions.items():
-            for state in tostates:
-                for char in tostates[state]:
-                    text += "    " + str(fromstate) + " -> " + str(
+        for fromState, toStates in self.transitions.items():
+            for state in toStates:
+                for char in toStates[state]:
+                    text += "    " + str(fromState) + " -> " + str(
                         state) + " on '" + char + "'\n"
                     linecount += 1
         return [text, linecount]
@@ -200,8 +213,8 @@ class Automata:
         [b, m2] = b.newBuildFromNumber(m1) # 子自动机二的状态编号从 m1 开始，并会返回子自动机最大的状态号 m2
         state2 = m2 # 大自动机的最后一个状态
         plus = Automata()
-        plus.setstartstate(state1)
-        plus.addfinalstates(state2)
+        plus.setStartState(state1)
+        plus.addfinalStates(state2)
         ```
 
         也可以用来复制一个自动机 `withNewStateNumber(0)`
@@ -213,12 +226,12 @@ class Automata:
             translations[i] = startStateNumber
             startStateNumber += 1
         newAutomata = Automata(self.language)
-        newAutomata.setstartstate(translations[self.startstate])
-        newAutomata.addfinalstates(translations[self.finalstates[0]])
-        for fromstate, tostates in self.transitions.items():
-            for state in tostates:
-                newAutomata.addtransition(translations[fromstate],
-                                          translations[state], tostates[state])
+        newAutomata.setStartState(translations[self.startstate])
+        newAutomata.addfinalStates(list(map(lambda state: translations[state], self.finalStates)))
+        for fromState, toStates in self.transitions.items():
+            for state in toStates:
+                newAutomata.addTransition(translations[fromState],
+                                          translations[state], toStates[state])
         newGroups = []
         for group in self.groups:
             mappedGroupStates = list(
@@ -227,18 +240,49 @@ class Automata:
         newAutomata.addGroups(newGroups)
         return [newAutomata, startStateNumber]
 
+    def splitNFA(self, splitPoints: List[int]) -> List['Automata']:
+        """
+        Split NFA into several NFA, useful when you want to NFAtoDFA for each part in parallel, or stript some part of NFA
+        """
+        splitAutomata = []
+        splitPoints = [self.startstate] + splitPoints
+        for index, toState in enumerate(splitPoints):
+            # TODO： get language subset properly
+            subAutomata = Automata()
+            if index == len(splitPoints) - 1: # last one
+                startState = toState
+                finalState = len(self.states) + self.startstate - 1 # we assume self.states start at 1
+            else: # first one and middle one
+                startState = toState
+                finalState = splitPoints[index + 1] + self.startstate - 1
+
+            subAutomata.setStartState(startState)
+            subAutomata.addfinalStates([finalState])
+            language: Set[str] = set()
+            for fromState, toStates in self.transitions.items():
+                for toState in toStates:
+                    if fromState in range(startState, finalState + 1) and toState in range(startState, finalState + 1):
+                        transitionTokens = toStates[toState]
+                        language = language.union(transitionTokens)
+                        subAutomata.addTransition(fromState, toState, transitionTokens)
+            language.remove(EPSILON)
+            subAutomata.setLanguage(language)
+            subAutomata, _ = subAutomata.withNewStateNumber(1)
+            splitAutomata.append(subAutomata)
+        return splitAutomata
+
     def newBuildFromEquivalentStates(self, equivalent, pos):
         """
         等价状态的合并
         """
         rebuild = Automata(self.language)
-        for fromstate, tostates in self.transitions.items():
-            for state in tostates:
-                rebuild.addtransition(pos[fromstate], pos[state],
-                                      tostates[state])
-        rebuild.setstartstate(pos[self.startstate])
-        for s in self.finalstates:
-            rebuild.addfinalstates(pos[s])
+        for fromState, toStates in self.transitions.items():
+            for state in toStates:
+                rebuild.addTransition(pos[fromState], pos[state],
+                                      toStates[state])
+        rebuild.setStartState(pos[self.startstate])
+        for s in self.finalStates:
+            rebuild.addfinalStates(pos[s])
         return rebuild
 
     def getDotFile(self):
@@ -246,14 +290,14 @@ class Automata:
         if len(self.states) != 0:
             dotFile += "root=s1\nstart [shape=point]\nstart->s%d\n" % self.startstate
             for state in self.states:
-                if state in self.finalstates:
+                if state in self.finalStates:
                     dotFile += "s%d [shape=doublecircle]\n" % state
                 else:
                     dotFile += "s%d [shape=circle]\n" % state
-            for fromstate, tostates in self.transitions.items():
-                for state in tostates:
-                    for char in tostates[state]:
-                        dotFile += 's%d->s%d [label="%s"]\n' % (fromstate,
+            for fromState, toStates in self.transitions.items():
+                for state in toStates:
+                    for char in toStates[state]:
+                        dotFile += 's%d->s%d [label="%s"]\n' % (fromState,
                                                                 state, char)
         dotFile += "}"
         return dotFile

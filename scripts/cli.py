@@ -8,36 +8,25 @@ import time
 from examples.NFAfromCustomRule import NFAFromRegex, executor, tokenizer
 from examples.customRuleDFAToTensor import dfa_to_tensor
 from examples.customRuleTokenizer import ruleParser
-from src.automata_tools import DFAtoMinimizedDFA, NFAtoDFA, WFA, get_word_to_index, drawGraph, isInstalled
+from src.automata_tools import DFAtoMinimizedDFA, NFAtoDFA, NFAtoDFAGroupStable, WFA, get_word_to_index, drawGraph, isInstalled
 
 def main():
-    rule = "(a(bb|b)c)d"
+    rule = "a+(bb|b)c d{0, 3} $*"
+    textInput = "a bb c"
     nfa = NFAFromRegex().buildNFA(rule)
-    dfa = NFAtoDFA(nfa)
-    minDFA = DFAtoMinimizedDFA(dfa)
+    # print(nfa.splitNFA([nfa.groups[0].startState, nfa.groups[0].finalState])[0])
+    # drawGraph(NFAtoDFA(nfa.splitNFA([nfa.groups[0].startState, nfa.groups[0].finalState])[0]), "splitdfa")
+    minDFA = NFAtoDFAGroupStable(nfa)
     minDFA.setExecuter(executor)
     minDFA.setTokenizer(tokenizer)
-    # print(minDFA.execute("aaa bbb"))
-    textInput = "a bb c"
+    if isInstalled("dot"):
+        # drawGraph(dfa, "dfa")
+        drawGraph(nfa, "nfa")
+        drawGraph(minDFA, "mdfa")
     print(minDFA.execute(textInput))
     _, wordToIndex = get_word_to_index([ruleParser(rule), tokenizer(textInput)])
     wfa = WFA(minDFA, wordToIndex, dfa_to_tensor)
     print(wfa.execute(textInput))
-    # print("\nNFA: ")
-    # nfaObj.displayNFA()
-    # print("\nDFA: ")
-    # dfaObj.displayDFA()
-    # print("\nMinimized DFA: ")
-    # dfaObj.displayMinimizedDFA()
-    if isInstalled("dot"):
-        drawGraph(dfa, "dfa")
-        drawGraph(nfa, "nfa")
-        drawGraph(minDFA, "mdfa")
-        # pickle.dump(dfa.to_dict(), open('dfa.pkl', 'wb'))
-        # pickle.dump(nfa.to_dict(), open('nfa.pkl', 'wb'))
-        # pickle.dump(minDFA.to_dict(), open('mdfa.pkl', 'wb'))
-        # print("\nGraphs have been created in the code directory")
-        # print(minDFA.getDotFile())
 
 
 if __name__ == '__main__':

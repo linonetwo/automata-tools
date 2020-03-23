@@ -21,10 +21,10 @@ def DFAtoMinimizedDFA(dfa: Automata) -> Automata:
         for j in range(i + 1, dfaStateLength):
             if not ([dfaStates[i], dfaStates[j]] in distinguished
                     or [dfaStates[j], dfaStates[i]] in distinguished):
-                iIsFinalButJisNot = (dfaStates[i] in dfa.finalstates
-                                     and dfaStates[j] not in dfa.finalstates)
-                jIsFinalButIisNot = (dfaStates[i] not in dfa.finalstates
-                                     and dfaStates[j] in dfa.finalstates)
+                iIsFinalButJisNot = (dfaStates[i] in dfa.finalStates
+                                     and dfaStates[j] not in dfa.finalStates)
+                jIsFinalButIisNot = (dfaStates[i] not in dfa.finalStates
+                                     and dfaStates[j] in dfa.finalStates)
                 if iIsFinalButJisNot or jIsFinalButIisNot:
                     distinguished.append([dfaStates[i], dfaStates[j]])
                     continue

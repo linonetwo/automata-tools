@@ -25,7 +25,7 @@ class WFA:
         return len(self.dfaDict['states'])
 
     def getFinalStateIndex(self) -> List[int]:
-        return [self.wfaState2idx[i] for i in self.dfaDict['finalstates']]
+        return [self.wfaState2idx[i] for i in self.dfaDict['finalStates']]
 
     def getStartStateIndex(self) -> int:
         return self.wfaState2idx[self.dfaDict['startstate']]

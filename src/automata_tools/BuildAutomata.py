@@ -14,9 +14,9 @@ class BuildAutomata:
         state1 = 1
         state2 = 2
         basic = Automata()
-        basic.setstartstate(state1)
-        basic.addfinalstates(state2)
-        basic.addtransition(1, 2, transitionToken)
+        basic.setStartState(state1)
+        basic.addfinalStates(state2)
+        basic.addTransition(1, 2, transitionToken)
         return basic
 
     @staticmethod
@@ -29,16 +29,16 @@ class BuildAutomata:
         [b, m2] = b.withNewStateNumber(m1)
         state2 = m2
         plus = Automata()
-        plus.setstartstate(state1)
-        plus.addfinalstates(state2)
-        plus.addtransition(cast(int, plus.startstate), cast(int, a.startstate),
+        plus.setStartState(state1)
+        plus.addfinalStates(state2)
+        plus.addTransition(cast(int, plus.startstate), cast(int, a.startstate),
                            EPSILON)
-        plus.addtransition(cast(int, plus.startstate), cast(int, b.startstate),
+        plus.addTransition(cast(int, plus.startstate), cast(int, b.startstate),
                            EPSILON)
-        plus.addtransition(a.finalstates[0], plus.finalstates[0], EPSILON)
-        plus.addtransition(b.finalstates[0], plus.finalstates[0], EPSILON)
-        plus.addtransition_dict(a.transitions)
-        plus.addtransition_dict(b.transitions)
+        plus.addTransition(a.finalStates[0], plus.finalStates[0], EPSILON)
+        plus.addTransition(b.finalStates[0], plus.finalStates[0], EPSILON)
+        plus.addTransitionsByDict(a.transitions)
+        plus.addTransitionsByDict(b.transitions)
         return plus
 
     @staticmethod
@@ -50,17 +50,17 @@ class BuildAutomata:
         """
         state1 = 1
         [leftAutomata, middleState1] = leftAutomata.withNewStateNumber(1)
-        [rightAutomata,
-         middleState2] = rightAutomata.withNewStateNumber(middleState1)
-        state2 = middleState2 - 1
-        ConcanatedAutomata = Automata()
-        ConcanatedAutomata.setstartstate(state1)
-        ConcanatedAutomata.addfinalstates(state2)
-        ConcanatedAutomata.addtransition(leftAutomata.finalstates[0],
-                          cast(int, rightAutomata.startstate), EPSILON)
-        ConcanatedAutomata.addtransition_dict(leftAutomata.transitions)
-        ConcanatedAutomata.addtransition_dict(rightAutomata.transitions)
-        ConcanatedAutomata.addGroups(leftAutomata.groups + rightAutomata.groups)
+        [rightAutomata, _] = rightAutomata.withNewStateNumber(middleState1)
+        ConcanatedAutomata = Automata(leftAutomata.language.union(rightAutomata.language))
+        ConcanatedAutomata.setStartState(state1)
+        for finalState in leftAutomata.finalStates:
+            ConcanatedAutomata.addTransition(
+                finalState, cast(int, rightAutomata.startstate), EPSILON)
+        ConcanatedAutomata.addfinalStates(rightAutomata.finalStates)
+        ConcanatedAutomata.addTransitionsByDict(leftAutomata.transitions)
+        ConcanatedAutomata.addTransitionsByDict(rightAutomata.transitions)
+        ConcanatedAutomata.addGroups(leftAutomata.groups +
+                                     rightAutomata.groups)
         return ConcanatedAutomata
 
     @staticmethod
@@ -76,18 +76,18 @@ class BuildAutomata:
         state1 = 1
         state2 = m1
         star = Automata()
-        star.setstartstate(state1)
-        star.addfinalstates(state2)
-        star.addtransition(cast(int, star.startstate),
+        star.setStartState(state1)
+        star.addfinalStates(state2)
+        star.addTransition(cast(int, star.startstate),
                            cast(int, inputAutomata.startstate), EPSILON)
-        star.addtransition(cast(int, star.startstate), star.finalstates[0],
+        star.addTransition(cast(int, star.startstate), star.finalStates[0],
                            EPSILON)
-        star.addtransition(inputAutomata.finalstates[0], star.finalstates[0],
+        star.addTransition(inputAutomata.finalStates[0], star.finalStates[0],
                            EPSILON)
         # (1)<-[ε]-(2)
-        star.addtransition(inputAutomata.finalstates[0],
+        star.addTransition(inputAutomata.finalStates[0],
                            cast(int, inputAutomata.startstate), EPSILON)
-        star.addtransition_dict(inputAutomata.transitions)
+        star.addTransitionsByDict(inputAutomata.transitions)
         return star
 
     @staticmethod
@@ -102,16 +102,16 @@ class BuildAutomata:
         [inputAutomata, m1] = inputAutomata.withNewStateNumber(2)
         state2 = m1
         questionMark = Automata()
-        questionMark.setstartstate(state1)
-        questionMark.addfinalstates(state2)
-        questionMark.addtransition(cast(int, questionMark.startstate),
+        questionMark.setStartState(state1)
+        questionMark.addfinalStates(state2)
+        questionMark.addTransition(cast(int, questionMark.startstate),
                                    cast(int, inputAutomata.startstate),
                                    EPSILON)
-        questionMark.addtransition(cast(int, questionMark.startstate),
-                                   questionMark.finalstates[0], EPSILON)
-        questionMark.addtransition(inputAutomata.finalstates[0],
-                                   questionMark.finalstates[0], EPSILON)
-        questionMark.addtransition_dict(inputAutomata.transitions)
+        questionMark.addTransition(cast(int, questionMark.startstate),
+                                   questionMark.finalStates[0], EPSILON)
+        questionMark.addTransition(inputAutomata.finalStates[0],
+                                   questionMark.finalStates[0], EPSILON)
+        questionMark.addTransitionsByDict(inputAutomata.transitions)
         return questionMark
 
     @staticmethod

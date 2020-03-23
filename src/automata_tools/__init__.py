@@ -1,6 +1,6 @@
 from automata_tools.Automata import Automata
 from automata_tools.BuildAutomata import BuildAutomata
-from automata_tools.NFAtoDFA import NFAtoDFA
+from automata_tools.NFAtoDFA import NFAtoDFA, NFAtoDFAGroupStable
 from automata_tools.DFAtoMinimizedDFA import DFAtoMinimizedDFA
 from automata_tools.WFA import WFA
 
