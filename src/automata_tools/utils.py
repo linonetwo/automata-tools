@@ -8,7 +8,7 @@ def drawGraph(
     file="",
 ):
     """From https://github.com/max99x/automata-editor/blob/master/util.py"""
-    f = os.popen(r"dot -Tpng -o graph%s.png" % file, 'w')
+    f = os.popen(r"dot -Tpng -o generated/%s.png" % file, 'w')
     try:
         f.write(automata.getDotFile())
     except:
