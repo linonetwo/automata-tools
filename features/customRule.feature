@@ -58,3 +58,12 @@ Feature: Write Custom Rule
       And it matches sentence "I may have her with me"
       And it matches sentence "I may have my little three with me"
       But it won't match sentence "I may have with me"
+
+  Scenario: Labeling some part of sequence using the capture group
+    Given the rule "I may (?<predicate>have (her|you)) with me"
+      Then it matches sentence "I may have you with me"
+      And it matches sentence "I may have her with me"
+      But it won't match sentence "I may have with me"
+      But it won't match sentence "I may have her you with me"
+      And it capture "have her" in sentence "I may have her with me"
+      And it capture "have you" in sentence "I may have you with me"

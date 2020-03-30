@@ -42,7 +42,7 @@ class BuildAutomata:
         return plus
 
     @staticmethod
-    def concatenationStruct(leftAutomata: Automata, rightAutomata: Automata):
+    def concatenationStruct(leftAutomata: Automata, rightAutomata: Automata, edge: str = EPSILON):
         """
         Concatenation simply involves connecting one NFA to the other; eg. ab is:
         WITH leftAutomata = (0)-[a]->(1), rightAutomata = (0)-[b]->(1)
@@ -55,7 +55,7 @@ class BuildAutomata:
         ConcanatedAutomata.setStartState(state1)
         for finalState in leftAutomata.finalStates:
             ConcanatedAutomata.addTransition(
-                finalState, cast(int, rightAutomata.startstate), EPSILON)
+                finalState, cast(int, rightAutomata.startstate), edge)
         ConcanatedAutomata.addfinalStates(rightAutomata.finalStates)
         ConcanatedAutomata.addTransitionsByDict(leftAutomata.transitions)
         ConcanatedAutomata.addTransitionsByDict(rightAutomata.transitions)

@@ -4,7 +4,7 @@ _project_root = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(os.path.join(_project_root, 'src'))
 sys.path.append(os.path.join(_project_root, 'examples'))
 
-from typing import Optional, List, Tuple, Dict, Set, cast
+from typing import Optional, List, Tuple, Dict, Set, cast, Union
 import re
 
 from src.automata_tools import BuildAutomata, Automata
@@ -118,13 +118,13 @@ def executor(tokens, startState, finalStates,
     return True
 
 
-class NFAFromRegex:
+class NFAFromDSL:
     """
     class for building e-nfa from regular expressions
     """
 
     #: 存放 + * 等特殊符号的栈
-    operatorStack: List[str] = []
+    operatorStack: List[Union[str, Dict[str, str]]] = [] # ['(', { type: '<', payload: 'label' }]
     #: 存放子自动机的栈
     automataStack: List[Automata] = []
 
@@ -138,14 +138,17 @@ class NFAFromRegex:
     closingBracket = ')'
     openingBrace = '{'
     closingBrace = '}'
+    openingAngleBracket = '<'
+    closingAngleBracket = '>'
 
     binaryOperators = [orOperator, concatOperator]
     unaryOperators = [starOperator, plusOperator, questionOperator]
     openingBrackets = [openingBracket, openingBrace]
     closingBrackets = [closingBracket, closingBrace]
+    angleBrackets = [openingAngleBracket, closingAngleBracket]
     allOperators = [
         initOperator
-    ] + binaryOperators + unaryOperators + openingBrackets + closingBrackets
+    ] + binaryOperators + unaryOperators + openingBrackets + closingBrackets + angleBrackets
 
     def __init__(self):
         pass
@@ -171,6 +174,13 @@ class NFAFromRegex:
                         self.unaryOperators): # previous is regular token or is not in (self.allOperators - ([self.closingBracket] + self.unaryOperators))
                     self.addOperatorToStack(self.concatOperator)
                 self.automataStack.append(BuildAutomata.characterStruct(token))
+            elif token == self.closingAngleBracket: # (?<label> xxx )
+                # to handle ( ? < label > , we get "label"
+                captureGroupLabel = ruleTokens[index - 1]
+                # add { type: '<', payload: [label] } to the stack, and process it when we reach ")"
+                self.addOperatorToStack({ 'type': self.openingAngleBracket, 'payload': captureGroupLabel })
+                index += 1
+                continue
             elif token == self.openingBracket: # "("
                 # concat current automata with previous one, same as above
                 if ((previous not in self.allOperators)
@@ -178,8 +188,12 @@ class NFAFromRegex:
                         self.unaryOperators):
                     self.addOperatorToStack(self.concatOperator)
                 self.operatorStack.append(token)
+                if ruleTokens[index + 1] == self.questionOperator and ruleTokens[index + 2] == self.openingAngleBracket and ruleTokens[index + 4] == self.closingAngleBracket: # (?<label> xxx )
+                    # to handle ( ? < label > , we jump to ">"
+                    index += 4
+                    previous = token
+                    continue
             elif token == self.closingBracket: # ")"
-                # print('previous', previous)
                 if previous in self.binaryOperators:
                     raise BaseException(
                         f"Error processing {token} after {previous}")
@@ -191,10 +205,12 @@ class NFAFromRegex:
                     # basically, operatorWithinGroup will only be binaryOperators or "("
                     if operatorWithinGroup in self.binaryOperators:
                         self.processOperator(operatorWithinGroup)
+                    elif type(operatorWithinGroup) == dict:
+                        operatorWithinGroup = cast(Dict[str, str], operatorWithinGroup)
+                        if operatorWithinGroup['type'] == self.openingAngleBracket:
+                            self.automataStack[-1].setAsGroup(operatorWithinGroup['payload'])
                     elif operatorWithinGroup == self.openingBracket:
                         break # this means we have process all the operators inside this group, maybe not outer group 1 in "(1(2))", but that will be deal with when we come to next ")"
-                self.automataStack[-1].setAsGroup()
-                # print('self.automataStack', self.automataStack)
             elif token == self.openingBrace:
                 # to handle { 0 , 2 } , we jump to "}"
                 index += 4
@@ -231,7 +247,7 @@ class NFAFromRegex:
         nfa.language = language
         return nfa
 
-    def addOperatorToStack(self, char: str):
+    def addOperatorToStack(self, char: Union[str, Dict[str, str]]):
         while (1):
             if len(self.operatorStack) == 0:
                 break
@@ -261,7 +277,7 @@ class NFAFromRegex:
             a = self.automataStack.pop()
             moreA = BuildAutomata.starStruct(a)
             self.automataStack.append(BuildAutomata.concatenationStruct(a, moreA))
-        elif operator == self.closingBrace:
+        elif operator == self.closingBrace: # '}'
             if payload == None:
                 raise BaseException(
                     f"Error processing operator {operator}. payload is None")

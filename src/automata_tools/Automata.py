@@ -91,11 +91,11 @@ class Automata:
         return self.executer(tokens, self.startstate, self.finalStates,
                              self.transitions)
 
-    def setAsGroup(self):
+    def setAsGroup(self, groupName: str):
         """
         If we have build a big automata, and wants to annotate it as a "(xxxx)" group, use this
         """
-        self.groups.append(GroupMetadata(list(self.states)))
+        self.groups.append(GroupMetadata(list(self.states), groupName))
 
     def addGroups(self, groups: Union[GroupMetadata, List[GroupMetadata]]):
         """
